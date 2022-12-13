@@ -5,6 +5,12 @@ The graduation project of Undergraduates from Elite Institute of Engineering, CQ
 
 - [ ] 你们可以先列举下自己需要完成的事项，先写在这
 
+### Progress
+
+- 开题报告提交 Deadline: 2023.01.20 [ ] 车 [ ] 端
+- 毕业设计（论文）提交 Deadline: 2023.05.10 [ ] 车 [ ] 端
+- 形式审查和毕业设计（论文）评阅（含交叉评阅）Deadline: 2023.05.15 [ ] 车 [ ] 端
+
 ### Vehicles 车端
 
 - [ ] xx
