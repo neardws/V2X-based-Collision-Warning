@@ -30,8 +30,16 @@ The graduation project of Undergraduates from Elite Institute of Engineering, CQ
 
 ### Edge 边缘端
 
-- [ ] xx
-- [ ] xx
+- [ ] 学习QT5开发 Deadline: 2023.01.01
+- [ ] 研读相关论文 Deadline: 2023.01.05
+- [x] 功能设计界面设计  Deadline: 2022.12.19
+- [ ] 实现车辆信息的获取  Deadline: 2023.01.15
+- [ ] 实现车辆信息的展示  Deadline: 2023.01.15
+- [ ] 实现车辆轨迹的绘制  Deadline: 2023.02.03
+- [ ] 实现车辆信息的处理  Deadline:2023.02.05
+- [ ] 实现碰撞预警  Deadline: 2023.02.07
+- [ ] 载入测试数据调试  Deadline: 2023.02.08
+- [ ] 调整及完善    Deadline: 2023.02.11
 
 ## Pull Requests 提交注意事项
 
