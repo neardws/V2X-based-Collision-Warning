@@ -13,14 +13,20 @@ The graduation project of Undergraduates from Elite Institute of Engineering, CQ
 
 ### Vehicles 车端
 
-- [ ] 复习安卓开发
-- [ ] 综述论文阅读
-- [ ] 车辆终端调研
-- [ ] 确定需求功能
-- [ ] 初步拟定接口
-- [ ] 初步实现界面
-- [ ] 载入测试数据调试
-- [ ] 调整及完善
+- [ ] 复习安卓开发  Deadline: 2023.01.01
+- [ ] 综述论文阅读  Deadline: 2023.01.01
+- [x] 原型
+    - [x] 初步草图  Deadline: 2022.12.19
+    - [x] 功能设计及界面设计    Deadline: 2022.12.19
+- [ ] 前端
+    - [ ] 实现车辆信息展示界面  Deadline: 2023.01.15
+    - [ ] 实现车辆轨迹展示界面  Deadline: 2023.02.01
+    - [ ] 实现碰撞预警展示  Deadline: 2023.02.03
+- [ ] 后端
+    - [ ] 实现车辆信息获取模块  Deadline: 2023.01.15
+    - [ ] 实现数据管理模块  Deadline:2023.02.08
+- [ ] 载入测试数据调试  Deadline: 2023.02.08
+- [ ] 调整及完善    Deadline: 2023.02.11
 
 ### Edge 边缘端
 
