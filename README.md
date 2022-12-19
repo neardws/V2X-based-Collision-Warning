@@ -3,8 +3,6 @@ The graduation project of Undergraduates from Elite Institute of Engineering, CQ
 
 ## TODO
 
-- [ ] 你们可以先列举下自己需要完成的事项，先写在这
-
 ### Progress
 
 - [ ] 开题报告提交 Deadline: 2023.01.20  
