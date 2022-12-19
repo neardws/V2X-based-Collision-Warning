@@ -13,8 +13,14 @@ The graduation project of Undergraduates from Elite Institute of Engineering, CQ
 
 ### Vehicles 车端
 
-- [ ] xx
-- [ ] xx
+- [ ] 复习安卓开发
+- [ ] 综述论文阅读
+- [ ] 车辆终端调研
+- [ ] 确定需求功能
+- [ ] 初步拟定接口
+- [ ] 初步实现界面
+- [ ] 载入测试数据调试
+- [ ] 调整及完善
 
 ### Edge 边缘端
 
