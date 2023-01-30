@@ -5,23 +5,23 @@ The graduation project of Undergraduates from Elite Institute of Engineering, CQ
 
 ### Progress
 
-- [ ] 开题报告提交 Deadline: 2023.01.20  
+- [x] 开题报告提交 Deadline: 2023.01.20  
 - [ ] 毕业设计（论文）提交 Deadline: 2023.05.10  
 - [ ] 形式审查和毕业设计（论文）评阅（含交叉评阅）Deadline: 2023.05.15  
 
 ### Vehicles 车端
 
-- [ ] 复习安卓开发  Deadline: 2023.01.01
-- [ ] 综述论文阅读  Deadline: 2023.01.01
+- [x] 复习安卓开发  Deadline: 2023.01.01
+- [x] 综述论文阅读  Deadline: 2023.01.01
 - [x] 原型
     - [x] 初步草图  Deadline: 2022.12.19
     - [x] 功能设计及界面设计    Deadline: 2022.12.19
 - [ ] 前端
-    - [ ] 实现车辆信息展示界面  Deadline: 2023.01.15
+    - [x] 实现车辆信息展示界面  Deadline: 2023.01.15
     - [ ] 实现车辆轨迹展示界面  Deadline: 2023.02.01
     - [ ] 实现碰撞预警展示  Deadline: 2023.02.03
 - [ ] 后端
-    - [ ] 实现车辆信息获取模块  Deadline: 2023.01.15
+    - [x] 实现车辆信息获取模块  Deadline: 2023.01.15
     - [ ] 实现数据管理模块  Deadline:2023.02.08
 - [ ] 载入测试数据调试  Deadline: 2023.02.08
 - [ ] 调整及完善    Deadline: 2023.02.11
