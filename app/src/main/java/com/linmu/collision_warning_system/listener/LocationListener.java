@@ -44,6 +44,7 @@ public class LocationListener extends BDAbstractLocationListener {
         bundle.putDouble("lat",latitude);
         bundle.putDouble("lon",longitude);
         bundle.putFloat("radius",radius);
+        bundle.putFloat("direction",direction);
         bundle.putFloat("speed",speed);
         bundle.putString("coordinateType",coordinateType);
         bundle.putInt("errorCode",errorCode);

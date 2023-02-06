@@ -1,6 +1,7 @@
 package com.linmu.collision_warning_system.services;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.baidu.trace.LBSTraceClient;
 import com.baidu.trace.Trace;
@@ -30,7 +31,7 @@ public class TraceService {
     OnTrackListener mTrackListener;
 
     public TraceService(Context context) {
-
+        LBSTraceClient.setAgreePrivacy(context,true);
         // 是否需要对象存储服务，默认为：false，关闭对象存储服务。注：鹰眼 Android SDK v3.0以上版本支持随轨迹上传图像等对象数据，若需使用此功能，该参数需设为 true，且需导入bos-android-sdk-1.0.2.jar。
         final boolean isNeedObjectStorage = false;
 
