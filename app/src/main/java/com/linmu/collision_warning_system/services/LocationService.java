@@ -1,18 +1,17 @@
 package com.linmu.collision_warning_system.services;
 
 import android.content.Context;
-import android.os.Handler;
 
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
-import com.linmu.collision_warning_system.listener.LocationListener;
+import com.linmu.collision_warning_system.MainActivity;
 
 public class LocationService {
 
     //定位服务的客户端。宿主程序在客户端声明此类，并调用，目前只支持在主线程中启动
     LocationClient mLocationClient;
 
-    public LocationService(Context context,Handler handler) {
+    public LocationService(Context context,MainActivity.LocationListener mLocationListener) {
         // 设置是否同意隐私合规政策，true表示用户同意，false表示用户不同意(需要在LocationClient实例化前调用)
         LocationClient.setAgreePrivacy(true);
 
@@ -21,8 +20,6 @@ public class LocationService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        // 创建并初始化handler
-        LocationListener mLocationListener = new LocationListener(handler);
         // 注册监听函数
         mLocationClient.registerLocationListener(mLocationListener);
     }
@@ -51,11 +48,11 @@ public class LocationService {
         // 可选，默认0，即仅定位一次，设置发起连续定位请求的间隔需要大于等于1000ms才是有效的
         locationOption.setScanSpan(1000);
         // 可选，设置是否需要地址信息，默认不需要
-        locationOption.setIsNeedAddress(true);
+        locationOption.setIsNeedAddress(false);
         // 可选，设置是否需要地址描述
         locationOption.setIsNeedLocationDescribe(true);
         // 可选，设置是否需要设备方向结果
-        locationOption.setNeedDeviceDirect(false);
+        locationOption.setNeedDeviceDirect(true);
         // 可选，默认false，设置是否当Gnss有效时按照1S1次频率输出Gnss结果
         locationOption.setLocationNotify(true);
         // 可选，默认true，定位SDK内部是一个SERVICE，并放到了独立进程，设置是否在stop的时候杀死这个进程，默认不杀死
@@ -76,5 +73,9 @@ public class LocationService {
         locationOption.setOpenAutoNotifyMode(3000,1, LocationClientOption.LOC_SENSITIVITY_HIGHT);
         // 需将配置好的LocationClientOption对象，通过setLocOption方法传递给LocationClient对象使用
         mLocationClient.setLocOption(locationOption);
+    }
+
+    public void stopLocation() {
+        mLocationClient.stop();
     }
 }

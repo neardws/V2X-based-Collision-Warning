@@ -50,6 +50,7 @@ public class TraceService {
         mTraceClient.setInterval(gatherInterval, packInterval);
 
         initTraceListener();
+        initTraceRequestListener();
 
         mTraceClient.startTrace(mTrace,mTraceListener);
     }
@@ -100,7 +101,9 @@ public class TraceService {
         mTrackListener = new OnTrackListener() {
             // 历史轨迹回调
             @Override
-            public void onHistoryTrackCallback(HistoryTrackResponse response) {}
+            public void onHistoryTrackCallback(HistoryTrackResponse response) {
+
+            }
         };
     }
 
