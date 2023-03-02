@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">Collision-Warning-System</string>
-    <string name="VehicleInfoShowTitle">车辆信息展示</string>
-    <string name="TrackShowTitle">轨迹展示</string>
     <string name="LocationCoordinateText">经纬度坐标</string>
     <string name="DefaultCoordinateText">(0.00000,0.00000)</string>
     <string name="car_img_description">车辆图</string>

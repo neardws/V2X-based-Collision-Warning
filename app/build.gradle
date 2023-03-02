@@ -5,9 +5,9 @@ plugins {
 android {
     signingConfigs {
         release {
-        storeFile file('E:\\Android\\apk_key\\linmu_apk.jks')
+            storeFile file('C:\\Users\\linmu\\my_apk_key.jks')
             storePassword 'qwe123'
-            keyAlias 'key001'
+            keyAlias 'key0'
             keyPassword 'qwe123'
         }
     }

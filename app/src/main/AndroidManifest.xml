@@ -9,6 +9,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <!-- 用于访问wifi网络信息，wifi信息会用于进行网络定位-->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- 用于读取手机当前的状态 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <!-- 获取运营商信息，用于支持提供运营商信息相关的接口-->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- 这个权限用于获取wifi的获取权限，wifi信息会用来进行网络定位-->
@@ -16,6 +18,8 @@
     <!-- 写入扩展存储，向扩展卡写入数据，用于写入离线定位数据-->
 <!--    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"-->
 <!--        tools:ignore="ScopedStorage" />-->
+    <uses-permission android:name="com.android.launcher.permission.READ_SETTINGS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
@@ -33,7 +37,7 @@
 
 
     <application
-        android:name=".App"
+        android:name=".Application"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -46,19 +50,9 @@
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="iZUts9hHCFjUZ5WhIaAlHAtSsyfy4CzC">
-        </meta-data>
+            android:value="ff37PSGZDOkWtnFjGXvmpI3SyB1OWqra"/>
 
-        <service
-            android:name="com.baidu.location.f"
-            android:enabled="true"
-            android:process=":remote">
-        </service>
-        <service
-            android:name="com.baidu.trace.LBSTraceService"
-            android:enabled="true"
-            android:process=":remote">
-        </service>
+
 
         <activity
             android:name=".MainActivity"
@@ -73,6 +67,18 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+
+        <service
+            android:name="com.baidu.location.f"
+            android:enabled="true"
+            android:process=":remote">
+        </service>
+
+        <service
+            android:name="com.baidu.trace.LBSTraceService"
+            android:enabled="true"
+            android:process=":remote">
+        </service>
     </application>
 
 </manifest>
