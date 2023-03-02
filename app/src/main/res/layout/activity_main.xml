@@ -17,8 +17,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-
-
             <TextView
                 android:id="@+id/location_coordinate_text"
                 android:layout_width="match_parent"
@@ -42,9 +40,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="50dp"
                 android:contentDescription="@string/car_img_description"
-                android:rotation="90"
                 android:scaleType="centerInside"
-                android:src="@drawable/vehicle_000">
+                android:src="@drawable/vehicle">
 
             </ImageView>
 
@@ -60,15 +57,7 @@
         app:layout_constraintLeft_toRightOf="@id/VehicleInfoLayout"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-
-
-<!--            <com.baidu.mapapi.map.TextureMapView-->
-<!--                android:id="@+id/baiduMapView"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:clickable="true" />-->
-
-
+        <!-- 本位置预留给动态创建的地图碎片 -->
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

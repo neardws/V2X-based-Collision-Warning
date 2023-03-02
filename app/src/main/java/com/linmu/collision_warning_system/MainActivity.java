@@ -23,11 +23,11 @@ import com.baidu.location.BDAbstractLocationListener;
 import com.baidu.location.BDLocation;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BaiduMapOptions;
-import com.baidu.mapapi.map.MapStatusUpdate;
-import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapView;
-import com.baidu.mapapi.map.MyLocationConfiguration;
 import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.fragment.MapFragment;
 import com.linmu.collision_warning_system.services.LocationService;
 import com.linmu.collision_warning_system.services.TraceService;
@@ -38,31 +38,19 @@ import java.text.NumberFormat;
 public class MainActivity extends FragmentActivity {
 
     private Context context;
-
+    // 碎片标签
     private static final String sNormalFragmentTag = "map_fragment";
-    private FragmentManager mFragmentManager;
     private MapFragment mMapFragment;
 
     private MapView mMapView;
-
     private BaiduMap baiduMap;
 
     private LocationService locationService;
     private TraceService traceService;
 
-
-    //权限数组（申请定位）
-    private final String[] permissions = new String[]{
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-    };
-    //返回code
-    private static final int ALL_FILE_REQUEST_CODE = 101;
-    private static final int OPEN_SET_REQUEST_CODE = 100;
-    //调用此方法判断是否拥有权限
+    private BitmapDescriptor mGreenTexture =
+            BitmapDescriptorFactory.fromAsset("Icon_road_green_arrow.png");
+    private BitmapDescriptor mBitmapCar = BitmapDescriptorFactory.fromResource(R.drawable.vehicle_xhdpi);
 
 
 
@@ -73,6 +61,7 @@ public class MainActivity extends FragmentActivity {
         context = getApplicationContext();
 
         initPermissions();
+
 
         setContentView(R.layout.activity_main);
 
@@ -101,16 +90,23 @@ public class MainActivity extends FragmentActivity {
         super.onDestroy();
 //        traceService.stop();
         locationService.stopLocation();
+        if (null != mBitmapCar) {
+            mBitmapCar.recycle();
+        }
+        if (null != mGreenTexture) {
+            mGreenTexture.recycle();
+        }
     }
 
     /**
      * 初始化地图
      */
     private void initMapFragment() {
-        mFragmentManager = getSupportFragmentManager();
+        FragmentManager mFragmentManager = getSupportFragmentManager();
 
         BaiduMapOptions baiduMapOptions = new BaiduMapOptions();
         baiduMapOptions.zoomControlsEnabled(false);
+        // 动态创建地图碎片
         mMapFragment = MapFragment.newInstance(baiduMapOptions);
 
         mFragmentManager.beginTransaction()
@@ -120,7 +116,9 @@ public class MainActivity extends FragmentActivity {
                 .commit();
     }
 
-
+    /**
+     * 定位消息监听器
+     */
     public class LocationListener extends BDAbstractLocationListener {
         // 定位接收函数
         @Override
@@ -168,6 +166,23 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    /***************************************************************************************
+     * 以下部分为申请权限
+     ***************************************************************************************
+     */
+
+    //权限数组（申请定位）
+    private final String[] permissions = new String[]{
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+    };
+    //返回code
+    private static final int ALL_FILE_REQUEST_CODE = 101;
+    private static final int OPEN_SET_REQUEST_CODE = 100;
+
     /**
      * 初始化权限
      * 检查是否拥有权限列表内的权限，若无则申请
@@ -177,7 +192,8 @@ public class MainActivity extends FragmentActivity {
         //检查是否已经有权限
         if (!Environment.isExternalStorageManager()) {
             //跳转新页面申请权限
-            ActivityResultLauncher<Intent> intentActivityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            ActivityResultLauncher<Intent> intentActivityResultLauncher =
+                    registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 //申请权限结果
                 if (result.getResultCode() == ALL_FILE_REQUEST_CODE) {
                     if (Environment.isExternalStorageManager()) {
