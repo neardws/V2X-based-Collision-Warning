@@ -4,16 +4,20 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.BaiduMapOptions;
+import com.baidu.mapapi.map.BitmapDescriptor;
+import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapStatusUpdate;
 import com.baidu.mapapi.map.MapStatusUpdateFactory;
 import com.baidu.mapapi.map.MapView;
 import com.baidu.mapapi.map.MyLocationConfiguration;
+import com.linmu.collision_warning_system.R;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -24,6 +28,7 @@ public class MapFragment extends Fragment {
     private MapView mapView;
     private BaiduMapOptions baiduMapOptions;
 
+    private final BitmapDescriptor mBitmapCar = BitmapDescriptorFactory.fromResource(R.drawable.vehicle_xhdpi);
 
     public MapFragment() {
         // Required empty public constructor
@@ -72,20 +77,20 @@ public class MapFragment extends Fragment {
         BaiduMap baiduMap = this.getBaiduMap();
         // 激活定位图层
         baiduMap.setMyLocationEnabled(true);
-//        // 隐藏logo
-//        View child = mapView.getChildAt(1);
-//        if (child instanceof ImageView){
-//            child.setVisibility(View.INVISIBLE);
-//        }
+        // 隐藏logo
+        View child = mapView.getChildAt(1);
+        if (child instanceof ImageView){
+            child.setVisibility(View.INVISIBLE);
+        }
         // 固定显示缩放比例
-        MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(19.0f);
+        MapStatusUpdate msu = MapStatusUpdateFactory.zoomTo(20.0f);
         baiduMap.setMapStatus(msu);
 
         // 配置设置
         MyLocationConfiguration myLocationConfiguration = new MyLocationConfiguration(
                 MyLocationConfiguration.LocationMode.FOLLOWING,
                 true,
-                null);
+                mBitmapCar);
 
         baiduMap.setMyLocationConfiguration(myLocationConfiguration);
     }
@@ -98,6 +103,9 @@ public class MapFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         this.mapView.onDestroy();
+        if (null != mBitmapCar) {
+            mBitmapCar.recycle();
+        }
     }
 
     public void onDestroy() {

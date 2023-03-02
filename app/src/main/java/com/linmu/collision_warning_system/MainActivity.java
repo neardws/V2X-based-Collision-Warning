@@ -26,16 +26,26 @@ import com.baidu.mapapi.map.BaiduMapOptions;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.map.Polyline;
+import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.linmu.collision_warning_system.Entry.Car;
 import com.linmu.collision_warning_system.fragment.MapFragment;
 import com.linmu.collision_warning_system.services.LocationService;
 import com.linmu.collision_warning_system.services.TraceService;
 
 import java.math.RoundingMode;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class MainActivity extends FragmentActivity {
+    private static final Car car = new Car("demoCar");
 
     private Context context;
     // 碎片标签
@@ -43,32 +53,31 @@ public class MainActivity extends FragmentActivity {
     private MapFragment mMapFragment;
 
     private MapView mMapView;
-    private BaiduMap baiduMap;
+    private BaiduMap mBaiduMap;
 
+    private boolean firstLocation = true;
     private LocationService locationService;
     private TraceService traceService;
 
-    private BitmapDescriptor mGreenTexture =
-            BitmapDescriptorFactory.fromAsset("Icon_road_green_arrow.png");
-    private BitmapDescriptor mBitmapCar = BitmapDescriptorFactory.fromResource(R.drawable.vehicle_xhdpi);
+    private Polyline mPolyline;
+    private Marker mMoveMarker;
+
+    private final BitmapDescriptor mGreenTexture = BitmapDescriptorFactory.fromAsset("Icon_road_green_arrow.png");
+
+
+    public ConcurrentHashMap carHashMap;
 
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         context = getApplicationContext();
-
         initPermissions();
-
-
         setContentView(R.layout.activity_main);
-
         initMapFragment();
 
-
-
+        carHashMap = new ConcurrentHashMap();
         locationService = new LocationService(context,new LocationListener());
         locationService.startLocation();
 
@@ -79,7 +88,7 @@ public class MainActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         mMapView = mMapFragment.getMapView();
-        baiduMap = mMapFragment.getBaiduMap();
+        mBaiduMap = mMapFragment.getBaiduMap();
     }
     @Override
     protected void onPause() {
@@ -90,9 +99,7 @@ public class MainActivity extends FragmentActivity {
         super.onDestroy();
 //        traceService.stop();
         locationService.stopLocation();
-        if (null != mBitmapCar) {
-            mBitmapCar.recycle();
-        }
+
         if (null != mGreenTexture) {
             mGreenTexture.recycle();
         }
@@ -131,6 +138,23 @@ public class MainActivity extends FragmentActivity {
                 return;
             }
 
+            // 若是第一次定位，则进行初始化，并抛弃定位数据。
+            if(firstLocation) {
+                carHashMap.put(car.getCarId(),car);
+                initPolyLine();
+                firstLocation = false;
+                return;
+            }
+            ConcurrentLinkedDeque<LatLng> latLonDeque = car.getDeque();
+            if(latLonDeque == null) {
+                Log.e("classEmpty", "onReceiveLocation: 位置队列为null");
+                return;
+            }
+            // 当储存位置数量达到10个后，弹出最早的位置。
+            if(latLonDeque.size() >= 10) {
+                latLonDeque.pollLast();
+            }
+
             // 纬度信息
             double latitude = bdLocation.getLatitude();
             // 经度信息
@@ -138,7 +162,7 @@ public class MainActivity extends FragmentActivity {
             // 定位精度
             float radius = bdLocation.getRadius();
             // 速度
-//            float speed = bdLocation.getSpeed();
+            float speed = bdLocation.getSpeed();
             // 经纬度坐标类型
 //            String coordinateType = bdLocation.getCoorType();
             // 定位类型或定位错误返回码
@@ -146,15 +170,25 @@ public class MainActivity extends FragmentActivity {
             // 方向
             float direction = bdLocation.getDirection();
 
+            // 添加新位置进入队列
+            LatLng newPosition = new LatLng(latitude,longitude);
+            latLonDeque.addFirst(newPosition);
+            car.setDeque(latLonDeque);
+            car.setLatLng(newPosition);
+            car.setSpeed(speed);
+            car.setDirection(direction);
+
+            //更新绘制
+            drawUpdatePolyLine();
+            // 更新地图显示
             MyLocationData locData = new MyLocationData.Builder()
                     .accuracy(radius)
                     .direction(direction) // 此处设置开发者获取到的方向信息，顺时针0-360
                     .latitude(latitude)
                     .longitude(longitude).build();
+            mBaiduMap = mMapView.getMap();
+            mBaiduMap.setMyLocationData(locData);
 
-            baiduMap = mMapView.getMap();
-
-            baiduMap.setMyLocationData(locData);
 
             // 更新经纬度文本
             TextView coordinateTextView = findViewById(R.id.location_coordinate);
@@ -164,6 +198,33 @@ public class MainActivity extends FragmentActivity {
             String coordinate = "( " + nf.format(longitude) + " , " + nf.format(latitude) + " )";
             coordinateTextView.setText(coordinate);
         }
+    }
+
+    /**
+     * 初始化路径纹理
+     */
+    private void initPolyLine() {
+        // 初始化需要至少两个点数据
+        List<LatLng> polylineList = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            polylineList.add(car.getLatLng());
+        }
+        // 绘制纹理PolyLine
+        PolylineOptions polylineOptions =
+                new PolylineOptions().points(polylineList)
+                        .width(20)
+                        .customTexture(mGreenTexture)
+                        .dottedLine(true)
+                        .zIndex(3);
+        mPolyline = (Polyline) mBaiduMap.addOverlay(polylineOptions);
+    }
+    /**
+     * 更新&绘制路径
+     */
+    private void drawUpdatePolyLine() {
+        List<LatLng> polylineList = new ArrayList<>(car.getDeque());
+        Collections.reverse(polylineList);
+        mPolyline.setPoints(polylineList);
     }
 
     /***************************************************************************************
