@@ -16,15 +16,16 @@ The graduation project of Undergraduates from Elite Institute of Engineering, CQ
 - [x] 原型
     - [x] 初步草图  Deadline: 2022.12.19
     - [x] 功能设计及界面设计    Deadline: 2022.12.19
-- [ ] 前端
-    - [x] 实现车辆信息展示界面  Deadline: 2023.01.15
-    - [ ] 实现车辆轨迹展示界面  Deadline: 2023.02.01
-    - [ ] 实现碰撞预警展示  Deadline: 2023.02.03
-- [ ] 后端
+- [ ] 前端显示
+- [x] 实现车辆信息展示界面  Deadline: 2023.01.15
+    - [x] 实现车辆轨迹展示界面  Deadline: 2023.02.01
+    - [ ] 实现碰撞预警展示  Deadline: 2023
+- [ ] 后端处理
     - [x] 实现车辆信息获取模块  Deadline: 2023.01.15
     - [ ] 实现数据管理模块  Deadline:2023.02.08
-- [ ] 载入测试数据调试  Deadline: 2023.02.08
-- [ ] 调整及完善    Deadline: 2023.02.11
+    - [ ] 实现通信管理模块  Deadline:2023
+- [ ] 载入测试数据调试  Deadline: 2023
+- [ ] 调整及完善    Deadline: 2023
 
 ### Edge 边缘端
 
