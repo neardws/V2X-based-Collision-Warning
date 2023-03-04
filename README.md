@@ -15,9 +15,9 @@ The graduation project of Undergraduates from Elite Institute of Engineering, CQ
 - [x] 综述论文阅读  Deadline: 2023.01.01
 - [x] 原型
     - [x] 初步草图  Deadline: 2022.12.19
-    - [x] 功能设计及界面设计    Deadline: 2022.12.19
+- [x] 功能设计及界面设计    Deadline: 2022.12.19
 - [ ] 前端显示
-- [x] 实现车辆信息展示界面  Deadline: 2023.01.15
+    - [x] 实现车辆信息展示界面  Deadline: 2023.01.15
     - [x] 实现车辆轨迹展示界面  Deadline: 2023.02.01
     - [ ] 实现碰撞预警展示  Deadline: 2023
 - [ ] 后端处理
