@@ -3,8 +3,8 @@ package com.linmu.collision_warning_system.services;
 
 import android.content.Context;
 
-import com.linmu.collision_warning_system.udp.ReceiveThread;
-import com.linmu.collision_warning_system.udp.SendThreadPool;
+import com.linmu.collision_warning_system.services.udp.ReceiveThread;
+import com.linmu.collision_warning_system.services.udp.SendThreadPool;
 
 import org.json.JSONObject;
 
