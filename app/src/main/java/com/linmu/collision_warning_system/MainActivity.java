@@ -26,15 +26,14 @@ import com.baidu.mapapi.map.BaiduMapOptions;
 import com.baidu.mapapi.map.BitmapDescriptor;
 import com.baidu.mapapi.map.BitmapDescriptorFactory;
 import com.baidu.mapapi.map.MapView;
-import com.baidu.mapapi.map.Marker;
 import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.Entry.Car;
 import com.linmu.collision_warning_system.fragment.MapFragment;
+import com.linmu.collision_warning_system.services.CommunicationService;
 import com.linmu.collision_warning_system.services.LocationService;
-import com.linmu.collision_warning_system.services.TraceService;
 
 import java.math.RoundingMode;
 import java.text.NumberFormat;
@@ -57,15 +56,15 @@ public class MainActivity extends FragmentActivity {
 
     private boolean firstLocation = true;
     private LocationService locationService;
-    private TraceService traceService;
 
     private Polyline mPolyline;
-    private Marker mMoveMarker;
 
     private final BitmapDescriptor mGreenTexture = BitmapDescriptorFactory.fromAsset("Icon_road_green_arrow.png");
 
 
-    public ConcurrentHashMap carHashMap;
+    private ConcurrentHashMap<String,Car> carHashMap;
+
+    private CommunicationService communicationService;
 
 
 
@@ -77,12 +76,12 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.activity_main);
         initMapFragment();
 
-        carHashMap = new ConcurrentHashMap();
+        carHashMap = new ConcurrentHashMap<>();
         locationService = new LocationService(context,new LocationListener());
         locationService.startLocation();
 
-//        traceService = new TraceService(context);
-//        traceService.start();
+        communicationService = new CommunicationService(context);
+        communicationService.startCommunication();
     }
     @Override
     protected void onResume() {
@@ -97,9 +96,8 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-//        traceService.stop();
         locationService.stopLocation();
-
+        communicationService.stopCommunication();
         if (null != mGreenTexture) {
             mGreenTexture.recycle();
         }
