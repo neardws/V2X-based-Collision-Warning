@@ -74,11 +74,6 @@
             android:process=":remote">
         </service>
 
-        <service
-            android:name="com.baidu.trace.LBSTraceService"
-            android:enabled="true"
-            android:process=":remote">
-        </service>
     </application>
 
 </manifest>
