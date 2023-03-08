@@ -16,8 +16,10 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.baidu.location.BDAbstractLocationListener;
 import com.baidu.location.BDLocation;
@@ -31,7 +33,10 @@ import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.Entry.Car;
+import com.linmu.collision_warning_system.fragment.CarInfoFragment;
+import com.linmu.collision_warning_system.fragment.CommunicationConfigFragment;
 import com.linmu.collision_warning_system.fragment.MapFragment;
+import com.linmu.collision_warning_system.fragment.MyFragmentAdapter;
 import com.linmu.collision_warning_system.services.CommunicationService;
 import com.linmu.collision_warning_system.services.LocationService;
 
@@ -50,6 +55,7 @@ public class MainActivity extends FragmentActivity {
     // 碎片标签
     private static final String sNormalFragmentTag = "map_fragment";
     private MapFragment mMapFragment;
+    private CarInfoFragment mCarInfoFragment;
 
     private MapView mMapView;
     private BaiduMap mBaiduMap;
@@ -74,7 +80,10 @@ public class MainActivity extends FragmentActivity {
         context = getApplicationContext();
         initPermissions();
         setContentView(R.layout.activity_main);
+        initPager();
         initMapFragment();
+
+
 
         carHashMap = new ConcurrentHashMap<>();
         locationService = new LocationService(context,new LocationListener());
@@ -82,6 +91,8 @@ public class MainActivity extends FragmentActivity {
 
         communicationService = new CommunicationService(context);
         communicationService.startCommunication();
+
+
     }
     @Override
     protected void onResume() {
@@ -119,6 +130,29 @@ public class MainActivity extends FragmentActivity {
                         , mMapFragment
                         , sNormalFragmentTag)
                 .commit();
+    }
+
+    /**
+     * 初始化ViewPager2
+     */
+    private void initPager() {
+        //Fragment
+        List<Fragment> list = new ArrayList<>();
+        list.add(CarInfoFragment.newInstance());
+        list.add(CommunicationConfigFragment.newInstance());
+        mCarInfoFragment = (CarInfoFragment) list.get(0);
+
+        MyFragmentAdapter myFragmentAdapter = new MyFragmentAdapter(getSupportFragmentManager(),getLifecycle(),list);
+        ViewPager2 viewPager = findViewById(R.id.viewpage2);
+        viewPager.setAdapter(myFragmentAdapter);
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
+                Log.d("positionOffset", ""+positionOffset);
+                Log.d("position", ""+position);
+            }
+        });
     }
 
     /**
@@ -176,6 +210,8 @@ public class MainActivity extends FragmentActivity {
             car.setSpeed(speed);
             car.setDirection(direction);
 
+            mCarInfoFragment.addValueToSnakeView(speed);
+
             //更新绘制
             drawUpdatePolyLine();
             // 更新地图显示
@@ -187,6 +223,11 @@ public class MainActivity extends FragmentActivity {
             mBaiduMap = mMapView.getMap();
             mBaiduMap.setMyLocationData(locData);
 
+            TextView speedTextView = findViewById(R.id.speed);
+            NumberFormat nf_speed = NumberFormat.getNumberInstance();
+            nf_speed.setMaximumFractionDigits(2);
+            nf_speed.setRoundingMode(RoundingMode.UP);
+            speedTextView.setText(nf_speed.format(speed));
 
             // 更新经纬度文本
             TextView coordinateTextView = findViewById(R.id.location_coordinate);

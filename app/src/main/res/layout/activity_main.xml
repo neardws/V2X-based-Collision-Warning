@@ -17,33 +17,11 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-            <TextView
-                android:id="@+id/location_coordinate_text"
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewpage2"
+                android:layout_weight="1.0"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
-                android:gravity="center"
-                android:text="@string/LocationCoordinateText"
-                android:textSize="25sp" />
-
-            <TextView
-                android:id="@+id/location_coordinate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:text="@string/DefaultCoordinateText"
-                android:textSize="25sp" />
-
-            <ImageView
-                android:layout_width="500dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
-                android:contentDescription="@string/car_img_description"
-                android:scaleType="centerInside"
-                android:src="@drawable/vehicle">
-
-            </ImageView>
+                android:layout_height="0dp"/>
 
     </LinearLayout>
 

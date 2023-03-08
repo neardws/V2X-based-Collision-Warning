@@ -3,4 +3,7 @@
     <string name="LocationCoordinateText">经纬度坐标</string>
     <string name="DefaultCoordinateText">(0.00000,0.00000)</string>
     <string name="car_img_description">车辆图</string>
+    <string name="speedValue">0.0</string>
+    <string name="speedTableImg">速度表盘图片</string>
+    <string name="speedUnit">km/s</string>
 </resources>
