@@ -9,4 +9,6 @@
     <string name="inputEditText">{\"tag\":1001}</string>
     <string name="send_button_text">发送</string>
     <string name="receive_text">接受到的消息</string>
+    <string name="obuIdValue">XXXXXX</string>
+    <string name="obuIdText">OBU ID:</string>
 </resources>

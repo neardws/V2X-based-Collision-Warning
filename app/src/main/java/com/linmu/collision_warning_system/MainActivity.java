@@ -227,19 +227,6 @@ public class MainActivity extends FragmentActivity {
             mBaiduMap = mMapView.getMap();
             mBaiduMap.setMyLocationData(locData);
 
-            TextView speedTextView = findViewById(R.id.speed);
-            NumberFormat nf_speed = NumberFormat.getNumberInstance();
-            nf_speed.setMaximumFractionDigits(2);
-            nf_speed.setRoundingMode(RoundingMode.UP);
-            speedTextView.setText(nf_speed.format(speed));
-
-            // 更新经纬度文本
-            TextView coordinateTextView = findViewById(R.id.location_coordinate);
-            NumberFormat nf = NumberFormat.getNumberInstance();
-            nf.setMaximumFractionDigits(5);
-            nf.setRoundingMode(RoundingMode.UP);
-            String coordinate = "( " + nf.format(longitude) + " , " + nf.format(latitude) + " )";
-            coordinateTextView.setText(coordinate);
         }
     }
 

@@ -15,6 +15,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import com.linmu.collision_warning_system.R;
 import com.linmu.collision_warning_system.services.CommunicationService;
@@ -87,20 +88,19 @@ public class CommunicationFragment extends Fragment {
 
         // 解析数据包
         int tag;
+        JSONObject data;
         try {
             tag = resJsonObject.getInt("tag");
-            JSONObject data;
             if(tag == 2101) {
                 data = resJsonObject.getJSONObject("data");
-                String obu_id = data.getString("device_id");
-                double latitude = data.getDouble("lat");
-                double longitude = data.getDouble("lon");
-                double direction = data.getDouble("hea");
-                double speed = data.getDouble("spd");
-                boolean latLonValid = data.getBoolean("pos_valid");
             }
             else if (tag == 2102){
-                data = resJsonObject.getJSONObject("data");
+                // TODO 多车位置处理
+                return true;
+            }
+            else {
+                Log.e("doHandleReceiveMessage", "无法处理的tag");
+                return false;
             }
         } catch (JSONException e) {
             throw new RuntimeException(e);
@@ -115,7 +115,10 @@ public class CommunicationFragment extends Fragment {
 
         Bundle ncsLocation = new Bundle();
 
-        getParentFragmentManager().setFragmentResult("ncsLocation",ncsLocation);
+        ncsLocation.putString("LocationData",data.toString());
+        FragmentManager fragmentManager = getParentFragmentManager();
+        fragmentManager.setFragmentResult("MyNcsLocationForMap",ncsLocation);
+        fragmentManager.setFragmentResult("MyNcsLocationForCarInfo",ncsLocation);
 
         return true;
     }

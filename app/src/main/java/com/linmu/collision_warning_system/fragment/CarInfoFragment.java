@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -11,6 +12,12 @@ import androidx.fragment.app.Fragment;
 
 import com.linmu.collision_warning_system.R;
 import com.txusballesteros.SnakeView;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -38,6 +45,7 @@ public class CarInfoFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getParentFragmentManager().setFragmentResultListener("MyNcsLocationForCarInfo", this, this::doHandleNcsLocation);
     }
 
     @Override
@@ -52,6 +60,44 @@ public class CarInfoFragment extends Fragment {
         snakeView = (SnakeView) requireView().findViewById(R.id.snake);
         snakeView.setMinValue(0.0f);
         snakeView.setMaxValue(200.0f);
+    }
+
+    private void doHandleNcsLocation(String requestKey,Bundle result) {
+        String dataString = result.getString("LocationData");
+        String obu_id;
+        double latitude,longitude,direction,speed;
+        try {
+            JSONObject data = new JSONObject(dataString);
+            obu_id = data.getString("device_id");
+            latitude = data.getDouble("lat");
+            longitude = data.getDouble("lon");
+            direction = data.getDouble("hea");
+            speed = data.getDouble("spd");
+            boolean latLonValid = data.getBoolean("pos_valid");
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        View rootView = requireView();
+
+        TextView obuIdValue = rootView.findViewById(R.id.obuIdValue);
+        obuIdValue.setText(obu_id);
+
+        // 给速度曲线添加值
+        snakeView.addValue((float) speed);
+        // 更新速度文本
+        TextView speedTextView = rootView.findViewById(R.id.speed);
+        NumberFormat nf_speed = NumberFormat.getNumberInstance();
+        nf_speed.setMaximumFractionDigits(2);
+        nf_speed.setRoundingMode(RoundingMode.UP);
+        speedTextView.setText(nf_speed.format(speed));
+
+        // 更新经纬度文本
+        TextView coordinateTextView = rootView.findViewById(R.id.location_coordinate);
+        NumberFormat nf = NumberFormat.getNumberInstance();
+        nf.setMaximumFractionDigits(5);
+        nf.setRoundingMode(RoundingMode.UP);
+        String coordinate = "( " + nf.format(longitude) + " , " + nf.format(latitude) + " )";
+        coordinateTextView.setText(coordinate);
     }
 
     public void addValueToSnakeView(float value) {
