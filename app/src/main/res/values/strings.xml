@@ -6,4 +6,7 @@
     <string name="speedValue">0.0</string>
     <string name="speedTableImg">速度表盘图片</string>
     <string name="speedUnit">km/s</string>
+    <string name="inputEditText">{\"tag\":1001}</string>
+    <string name="send_button_text">发送</string>
+    <string name="receive_text">接受到的消息</string>
 </resources>

@@ -6,12 +6,12 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.linmu.collision_warning_system.MainActivity;
 
-public class LocationService {
+public class BaiduLocationService {
 
     //定位服务的客户端。宿主程序在客户端声明此类，并调用，目前只支持在主线程中启动
     LocationClient mLocationClient;
 
-    public LocationService(Context context,MainActivity.LocationListener mLocationListener) {
+    public BaiduLocationService(Context context, MainActivity.LocationListener mLocationListener) {
         // 设置是否同意隐私合规政策，true表示用户同意，false表示用户不同意(需要在LocationClient实例化前调用)
         LocationClient.setAgreePrivacy(true);
 

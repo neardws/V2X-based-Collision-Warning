@@ -2,17 +2,12 @@ package com.linmu.collision_warning_system;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.Settings;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -34,11 +29,11 @@ import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.Entry.Car;
 import com.linmu.collision_warning_system.fragment.CarInfoFragment;
-import com.linmu.collision_warning_system.fragment.CommunicationConfigFragment;
+import com.linmu.collision_warning_system.fragment.CommunicationFragment;
 import com.linmu.collision_warning_system.fragment.MapFragment;
 import com.linmu.collision_warning_system.fragment.MyFragmentAdapter;
 import com.linmu.collision_warning_system.services.CommunicationService;
-import com.linmu.collision_warning_system.services.LocationService;
+import com.linmu.collision_warning_system.services.NcsLocationService;
 
 import java.math.RoundingMode;
 import java.text.NumberFormat;
@@ -56,12 +51,12 @@ public class MainActivity extends FragmentActivity {
     private static final String sNormalFragmentTag = "map_fragment";
     private MapFragment mMapFragment;
     private CarInfoFragment mCarInfoFragment;
+    private CommunicationFragment mCommunicationFragment;
 
     private MapView mMapView;
     private BaiduMap mBaiduMap;
 
     private boolean firstLocation = true;
-    private LocationService locationService;
 
     private Polyline mPolyline;
 
@@ -72,28 +67,36 @@ public class MainActivity extends FragmentActivity {
 
     private CommunicationService communicationService;
 
+    private NcsLocationService ncsLocationService;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 获取应用上下文
         context = getApplicationContext();
+        // 检查并动态申请权限
         initPermissions();
         setContentView(R.layout.activity_main);
+
+        // 初始化 pageview
         initPager();
+        // 初始化地图碎片
         initMapFragment();
 
-
-
-        carHashMap = new ConcurrentHashMap<>();
-        locationService = new LocationService(context,new LocationListener());
-        locationService.startLocation();
-
+        // 创建通信服务
         communicationService = new CommunicationService(context);
-        communicationService.startCommunication();
 
+        mCommunicationFragment.setCommunicationService(communicationService);
 
+        // 初始化车辆hashMap
+        carHashMap = new ConcurrentHashMap<>();
+        // 初始化 NCS 定位服务
+        ncsLocationService = new NcsLocationService(communicationService);
+        ncsLocationService.checkNcsState();
+        ncsLocationService.loginNcs();
     }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -107,11 +110,36 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        locationService.stopLocation();
         communicationService.stopCommunication();
+        ncsLocationService.logoutNcs();
         if (null != mGreenTexture) {
             mGreenTexture.recycle();
         }
+    }
+
+    /**
+     * 初始化ViewPager2
+     */
+    private void initPager() {
+        //Fragment
+        List<Fragment> list = new ArrayList<>();
+        list.add(CarInfoFragment.newInstance());
+        list.add(CommunicationFragment.newInstance());
+        //TODO 这里必须创建完后获取，具体原因待测试
+        mCarInfoFragment = (CarInfoFragment) list.get(0);
+        mCommunicationFragment = (CommunicationFragment) list.get(1);
+
+        MyFragmentAdapter myFragmentAdapter = new MyFragmentAdapter(getSupportFragmentManager(),getLifecycle(),list);
+        ViewPager2 viewPager = findViewById(R.id.viewpage2);
+        viewPager.setAdapter(myFragmentAdapter);
+        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
+                Log.d("positionOffset", ""+positionOffset);
+                Log.d("position", ""+position);
+            }
+        });
     }
 
     /**
@@ -130,29 +158,6 @@ public class MainActivity extends FragmentActivity {
                         , mMapFragment
                         , sNormalFragmentTag)
                 .commit();
-    }
-
-    /**
-     * 初始化ViewPager2
-     */
-    private void initPager() {
-        //Fragment
-        List<Fragment> list = new ArrayList<>();
-        list.add(CarInfoFragment.newInstance());
-        list.add(CommunicationConfigFragment.newInstance());
-        mCarInfoFragment = (CarInfoFragment) list.get(0);
-
-        MyFragmentAdapter myFragmentAdapter = new MyFragmentAdapter(getSupportFragmentManager(),getLifecycle(),list);
-        ViewPager2 viewPager = findViewById(R.id.viewpage2);
-        viewPager.setAdapter(myFragmentAdapter);
-        viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                Log.d("positionOffset", ""+positionOffset);
-                Log.d("position", ""+position);
-            }
-        });
     }
 
     /**
@@ -195,8 +200,7 @@ public class MainActivity extends FragmentActivity {
             float radius = bdLocation.getRadius();
             // 速度
             float speed = bdLocation.getSpeed();
-            // 经纬度坐标类型
-//            String coordinateType = bdLocation.getCoorType();
+
             // 定位类型或定位错误返回码
 //            int errorCode = bdLocation.getLocType();
             // 方向
@@ -279,8 +283,6 @@ public class MainActivity extends FragmentActivity {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
     };
-    //返回code
-    private static final int ALL_FILE_REQUEST_CODE = 101;
     private static final int OPEN_SET_REQUEST_CODE = 100;
 
     /**
@@ -288,28 +290,10 @@ public class MainActivity extends FragmentActivity {
      * 检查是否拥有权限列表内的权限，若无则申请
      */
     private void initPermissions() {
-
-        //检查是否已经有权限
-        if (!Environment.isExternalStorageManager()) {
-            //跳转新页面申请权限
-            ActivityResultLauncher<Intent> intentActivityResultLauncher =
-                    registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                //申请权限结果
-                if (result.getResultCode() == ALL_FILE_REQUEST_CODE) {
-                    if (Environment.isExternalStorageManager()) {
-                        Toast.makeText(MainActivity.this, "访问所有文件权限申请成功", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-            Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
-            intentActivityResultLauncher.launch(intent);
-        }
-
         if (lacksPermission(permissions)) {//判断是否拥有权限
             //请求权限，第二参数权限String数据，第三个参数是请求码便于在onRequestPermissionsResult 方法中根据code进行判断
             ActivityCompat.requestPermissions(this, permissions, OPEN_SET_REQUEST_CODE);
         }
-
     }
 
     /**
