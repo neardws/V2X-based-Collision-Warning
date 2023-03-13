@@ -1,6 +1,7 @@
 package com.linmu.collision_warning_system.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.linmu.collision_warning_system.R;
+import com.linmu.collision_warning_system.services.CarManageService;
 import com.txusballesteros.SnakeView;
 
 import org.json.JSONException;
@@ -57,7 +59,10 @@ public class CarInfoFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        snakeView = (SnakeView) requireView().findViewById(R.id.snake);
+        View rootView = requireView();
+        TextView obuIdValue = rootView.findViewById(R.id.obuIdValue);
+        obuIdValue.setText(CarManageService.getCarSelf().getCarId());
+        snakeView = (SnakeView) rootView.findViewById(R.id.snake);
         snakeView.setMinValue(0.0f);
         snakeView.setMaxValue(200.0f);
     }
@@ -65,13 +70,12 @@ public class CarInfoFragment extends Fragment {
     private void doHandleNcsLocation(String requestKey,Bundle result) {
         String dataString = result.getString("LocationData");
         String obu_id;
-        double latitude,longitude,direction,speed;
+        double latitude,longitude,speed;
         try {
             JSONObject data = new JSONObject(dataString);
             obu_id = data.getString("device_id");
             latitude = data.getDouble("lat");
             longitude = data.getDouble("lon");
-            direction = data.getDouble("hea");
             speed = data.getDouble("spd");
             boolean latLonValid = data.getBoolean("pos_valid");
         } catch (JSONException e) {
@@ -79,8 +83,10 @@ public class CarInfoFragment extends Fragment {
         }
         View rootView = requireView();
 
-        TextView obuIdValue = rootView.findViewById(R.id.obuIdValue);
-        obuIdValue.setText(obu_id);
+        if(!obu_id.equals(CarManageService.getCarSelf().getCarId())) {
+            Log.w("doHandleNcsLocation", "车辆ID与本车不匹配");
+            return;
+        }
 
         // 给速度曲线添加值
         snakeView.addValue((float) speed);
@@ -98,9 +104,5 @@ public class CarInfoFragment extends Fragment {
         nf.setRoundingMode(RoundingMode.UP);
         String coordinate = "( " + nf.format(longitude) + " , " + nf.format(latitude) + " )";
         coordinateTextView.setText(coordinate);
-    }
-
-    public void addValueToSnakeView(float value) {
-        snakeView.addValue(value);
     }
 }

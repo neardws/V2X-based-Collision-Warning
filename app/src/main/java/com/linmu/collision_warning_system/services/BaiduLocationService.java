@@ -2,16 +2,21 @@ package com.linmu.collision_warning_system.services;
 
 import android.content.Context;
 
+import com.baidu.location.BDAbstractLocationListener;
+import com.baidu.location.BDLocation;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
-import com.linmu.collision_warning_system.MainActivity;
+import com.baidu.mapapi.map.MyLocationData;
+import com.baidu.mapapi.model.LatLng;
 
 public class BaiduLocationService {
 
     //定位服务的客户端。宿主程序在客户端声明此类，并调用，目前只支持在主线程中启动
-    LocationClient mLocationClient;
+    private LocationClient mLocationClient;
 
-    public BaiduLocationService(Context context, MainActivity.LocationListener mLocationListener) {
+    private boolean firstLocation = true;
+
+    public BaiduLocationService(Context context, LocationListener mLocationListener) {
         // 设置是否同意隐私合规政策，true表示用户同意，false表示用户不同意(需要在LocationClient实例化前调用)
         LocationClient.setAgreePrivacy(true);
 
@@ -73,6 +78,45 @@ public class BaiduLocationService {
         locationOption.setOpenAutoNotifyMode(3000,1, LocationClientOption.LOC_SENSITIVITY_HIGHT);
         // 需将配置好的LocationClientOption对象，通过setLocOption方法传递给LocationClient对象使用
         mLocationClient.setLocOption(locationOption);
+    }
+
+    /**
+     * 定位消息监听器
+     */
+    public class LocationListener extends BDAbstractLocationListener {
+        // 定位接收函数
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            // 这里的BDLocation为接收到的定位结果信息类
+
+            // 若是第一次定位，则进行初始化，并抛弃定位数据。
+            if(firstLocation) {
+                firstLocation = false;
+                return;
+            }
+            // 纬度信息
+            double latitude = bdLocation.getLatitude();
+            // 经度信息
+            double longitude = bdLocation.getLongitude();
+            // 定位精度
+            float radius = bdLocation.getRadius();
+            // 速度
+            float speed = bdLocation.getSpeed();
+            // 方向
+            float direction = bdLocation.getDirection();
+            // 添加新位置进入队列
+            LatLng newPosition = new LatLng(latitude,longitude);
+
+
+
+            // 更新地图显示
+            MyLocationData locData = new MyLocationData.Builder()
+                    .accuracy(radius)
+                    .direction(direction) // 此处设置开发者获取到的方向信息，顺时针0-360
+                    .latitude(latitude)
+                    .longitude(longitude).build();
+
+        }
     }
 
     public void stopLocation() {

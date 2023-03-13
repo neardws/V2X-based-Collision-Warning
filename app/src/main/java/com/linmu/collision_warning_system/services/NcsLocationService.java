@@ -34,7 +34,7 @@ public class NcsLocationService {
         }
         switch (tag) {
             case 1002: {
-                Log.w("checkNcsState", "广播寻址成功！");
+                doHandleStateCheckRes(res);
                 break;
             }
             case 2002: {
@@ -73,6 +73,19 @@ public class NcsLocationService {
         }
         communicationService.sentAndReceive(50501,loginNcs,receiveHandler);
     }
+    private void doHandleStateCheckRes(JSONObject res) {
+        String obuId;
+        try {
+            JSONObject data = res.getJSONObject("data");
+            obuId = data.getString("vehicle_num");
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        boolean initCarSelfRes = CarManageService.initCarSelf(obuId);
+        String wordRsp = initCarSelfRes ? "车辆初始化成功" : "车辆初始化失败";
+        Log.w("checkNcsState", String.format("广播寻址成功! %s OBU_id: %s",wordRsp,obuId));
+        Log.w("checkNcsState", String.format("json: %s",res));
+    }
     private void doHandleLoginRes(JSONObject res) {
         int rsp;
         try {
@@ -81,10 +94,8 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-
         String wordRsp = rsp == 0 ? "成功" : "失败";
         Log.w("NCS_login", String.format("startReceive:  登录: %s unique: %s",wordRsp,unique));
-
         // 通信服务开始接受消息
         communicationService.startReceive();
     }
