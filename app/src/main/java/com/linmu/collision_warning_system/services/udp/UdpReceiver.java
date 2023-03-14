@@ -36,7 +36,8 @@ public class UdpReceiver {
     public void setHandler(Handler receiverHandler) {
         mServer = new Messenger(receiverHandler);
     }
-    public JSONObject receiveOnce(DatagramSocket socket) throws IOException {
+
+    private JSONObject receive(DatagramSocket socket) throws IOException {
         JSONObject jsonObject;
         DatagramPacket receivePacket;
         byte[] buff = new byte[BUFF_SIZE];//发送过来的数据的长度范围
@@ -66,12 +67,25 @@ public class UdpReceiver {
         return jsonObject;
     }
 
+    public void receiveOnce(DatagramSocket socket) throws RemoteException, IOException {
+
+        JSONObject jsonObject = receive(socket);
+        if(mServer == null) {
+            Log.e("receiveOnce", "Message Server 还没有初始化");
+            return;
+        }
+        Message message = new Message();
+        message.what = 1111;
+        message.obj = jsonObject;
+        mServer.send(message);
+    }
+
     public void startReceive() throws IOException, RemoteException {
         DatagramSocket socket = new DatagramSocket(port);
         while (!stop) {
             JSONObject jsonObject;
 
-            jsonObject = receiveOnce(socket);
+            jsonObject = receive(socket);
 
             if(jsonObject == null) continue;
 
@@ -82,7 +96,7 @@ public class UdpReceiver {
 
             // 创建消息并发送
             Message receivedMessage = Message.obtain();
-            receivedMessage.what = 1000;
+            receivedMessage.what = 2222;
 
             receivedMessage.obj = jsonObject;
 

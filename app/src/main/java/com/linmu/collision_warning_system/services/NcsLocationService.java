@@ -1,9 +1,9 @@
 package com.linmu.collision_warning_system.services;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+
+import androidx.fragment.app.FragmentManager;
 
 import com.linmu.collision_warning_system.utils.IpUtil;
 
@@ -11,18 +11,21 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class NcsLocationService {
-    private String unique;
-    private final CommunicationService communicationService;
-    private final Handler receiveHandler;
 
-    public NcsLocationService(CommunicationService communicationService) {
-        this.communicationService = communicationService;
-        receiveHandler = new Handler(Looper.getMainLooper(), this::doHandleReceiveMessage);
+    private static final NcsLocationService INSTANCE = new NcsLocationService();
+    public static void setCommunicationService(CommunicationService communicationService) {
+        INSTANCE.communicationService = communicationService;
+    }
+    public static NcsLocationService getInstance() {
+        return INSTANCE;
     }
 
-    private boolean doHandleReceiveMessage(Message msg) {
-        if(msg.what != 1002) return false;
+    private String unique;
+    private CommunicationService communicationService;
 
+    private NcsLocationService() {}
+
+    public boolean doHandleReceiveOnceMessage(Message msg) {
         JSONObject res = (JSONObject) msg.obj;
 
         int tag;
@@ -55,7 +58,7 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        communicationService.sentAndReceive(50502,askNcsState,receiveHandler);
+        communicationService.sentAndReceive(50502,askNcsState);
     }
 
     public void loginNcs() {
@@ -71,7 +74,7 @@ public class NcsLocationService {
             logoutNcs();
             throw new RuntimeException(e);
         }
-        communicationService.sentAndReceive(50501,loginNcs,receiveHandler);
+        communicationService.sentAndReceive(50501,loginNcs);
     }
     private void doHandleStateCheckRes(JSONObject res) {
         String obuId;
@@ -85,6 +88,9 @@ public class NcsLocationService {
         String wordRsp = initCarSelfRes ? "车辆初始化成功" : "车辆初始化失败";
         Log.w("checkNcsState", String.format("广播寻址成功! %s OBU_id: %s",wordRsp,obuId));
         Log.w("checkNcsState", String.format("json: %s",res));
+
+        // 进行NCS登录
+        this.loginNcs();
     }
     private void doHandleLoginRes(JSONObject res) {
         int rsp;

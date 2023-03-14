@@ -3,8 +3,6 @@ package com.linmu.collision_warning_system.services;
 
 import android.content.Context;
 import android.os.Handler;
-import android.os.Message;
-import android.os.Messenger;
 import android.os.RemoteException;
 
 import com.linmu.collision_warning_system.services.udp.UdpReceiver;
@@ -25,21 +23,18 @@ import java.util.concurrent.TimeUnit;
  * 通信服务类
  */
 public class CommunicationService {
-
-    private final UdpReceiver receiver;
-    private final UdpSender sender;
-    private final ThreadPoolExecutor mThreadPool;
-
-
-    public CommunicationService(Context context) {
+    private static final CommunicationService INSTANCE = new CommunicationService();
+    public static CommunicationService getInstance() {
+        return INSTANCE;
+    }
+    public static void initConfig(Context context) {
         Properties config = PropertiesUtil.getProperties(context,"CommunicationConfig.properties");
         int corePoolSize = Integer.parseInt(config.getProperty("send.corePoolSize"));
         int maxPoolSize = Integer.parseInt(config.getProperty("send.maxPoolSize"));
         long keepAliveTime = Long.parseLong(config.getProperty("send.keepAliveTime"));
 
-
         // 初始化线程池
-        mThreadPool = new ThreadPoolExecutor(
+        INSTANCE.mThreadPool = new ThreadPoolExecutor(
                 corePoolSize,
                 maxPoolSize,
                 keepAliveTime,
@@ -50,12 +45,19 @@ public class CommunicationService {
 
         String receivePort = config.getProperty("receive.port");
         String buffSize = config.getProperty("BUFF_SIZE");
-        receiver = new UdpReceiver(receivePort, buffSize);
+        INSTANCE.receiver = new UdpReceiver(receivePort, buffSize);
 
         String targetIp = config.getProperty("send.targetIp");
         String targetPort = config.getProperty("send.targetPort");
-        sender = new UdpSender(targetIp,targetPort);
+        INSTANCE.sender = new UdpSender(targetIp,targetPort);
     }
+
+    private UdpReceiver receiver;
+    private UdpSender sender;
+    private ThreadPoolExecutor mThreadPool;
+
+    private CommunicationService() {}
+
 
     public void setReceiverHandler(Handler receiverHandler) {
         receiver.setHandler(receiverHandler);
@@ -71,8 +73,7 @@ public class CommunicationService {
         });
     }
 
-    public void sentAndReceive(int port, JSONObject jsonObject, Handler handler){
-        Messenger messenger = new Messenger(handler);
+    public void sentAndReceive(int port, JSONObject jsonObject){
         mThreadPool.execute(() -> {
             try {
                 sender.send(port,jsonObject);
@@ -82,11 +83,7 @@ public class CommunicationService {
             DatagramSocket socket;
             try {
                 socket = new DatagramSocket(port);
-                JSONObject res = receiver.receiveOnce(socket);
-                Message msg = new Message();
-                msg.what = 1002;
-                msg.obj = res;
-                messenger.send(msg);
+                receiver.receiveOnce(socket);
             } catch (IOException | RemoteException e) {
                 throw new RuntimeException(e);
             }

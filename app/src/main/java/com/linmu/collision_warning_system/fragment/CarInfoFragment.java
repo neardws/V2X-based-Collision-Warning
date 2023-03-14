@@ -60,8 +60,6 @@ public class CarInfoFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         View rootView = requireView();
-        TextView obuIdValue = rootView.findViewById(R.id.obuIdValue);
-        obuIdValue.setText(CarManageService.getCarSelf().getCarId());
         snakeView = (SnakeView) rootView.findViewById(R.id.snake);
         snakeView.setMinValue(0.0f);
         snakeView.setMaxValue(200.0f);
@@ -82,6 +80,9 @@ public class CarInfoFragment extends Fragment {
             throw new RuntimeException(e);
         }
         View rootView = requireView();
+
+        TextView obuIdValue = rootView.findViewById(R.id.obuIdValue);
+        obuIdValue.setText(CarManageService.getCarSelf().getCarId());
 
         if(!obu_id.equals(CarManageService.getCarSelf().getCarId())) {
             Log.w("doHandleNcsLocation", "车辆ID与本车不匹配");

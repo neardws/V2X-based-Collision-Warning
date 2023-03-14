@@ -18,7 +18,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.linmu.collision_warning_system.R;
+import com.linmu.collision_warning_system.services.CarManageService;
 import com.linmu.collision_warning_system.services.CommunicationService;
+import com.linmu.collision_warning_system.services.NcsLocationService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,11 +32,11 @@ import org.json.JSONObject;
  */
 public class CommunicationFragment extends Fragment {
 
-    private EditText inputEditText;
+    private EditText inputEditText = null;
 
     private CommunicationService communicationService;
 
-    public CommunicationFragment() {
+    private CommunicationFragment() {
         // Required empty public constructor
     }
 
@@ -64,9 +66,6 @@ public class CommunicationFragment extends Fragment {
         inputEditText = view.findViewById(R.id.inputEditText);
         Button sentButton = view.findViewById(R.id.sendButton);
         sentButton.setOnClickListener(this::doOnSendButtonClick);
-        // 接受消息的 handler，具体处理放在 doHandleReceiveMessage
-        Handler receiverHandler = new Handler(Looper.getMainLooper(), this::doHandleReceiveMessage);
-        communicationService.setReceiverHandler(receiverHandler);
     }
 
     private void doOnSendButtonClick(View view) {
@@ -82,8 +81,35 @@ public class CommunicationFragment extends Fragment {
         communicationService.sentMessage(-1,jsonObject);
     }
 
+    public void initCommunication() {
+        this.communicationService = CommunicationService.getInstance();
+        // 接受消息的 handler，具体处理放在 doHandleReceiveMessage
+        Handler receiverHandler = new Handler(Looper.getMainLooper(), this::doHandleReceiveMessage);
+        this.communicationService.setReceiverHandler(receiverHandler);
+    }
+
+
     private boolean doHandleReceiveMessage(Message msg) {
+        boolean handleRes;
+        switch (msg.what) {
+            case 1111: {
+                handleRes = NcsLocationService.getInstance().doHandleReceiveOnceMessage(msg);
+                return handleRes;
+            }
+            case 2222: {
+                handleRes = doHandleLocationMessage(msg);
+                return handleRes;
+            }
+        }
+        return false;
+    }
+
+    private boolean doHandleLocationMessage(Message msg) {
         JSONObject resJsonObject = (JSONObject) msg.obj;
+        if(CarManageService.getCarSelf() == null) {
+            Log.w("doHandleReceiveMessage", "本车还没有完成初始化! 拒绝处理接收消息!");
+            return false;
+        }
         Log.i("handleMessage", String.format("doHandleReceiverMessage: %s",resJsonObject.toString()));
 
         // 解析数据包
@@ -105,6 +131,9 @@ public class CommunicationFragment extends Fragment {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+        if(this.inputEditText == null) {
+            return false;
+        }
         // 更新接收消息页
         TextView receiveTextView = this.requireView().findViewById(R.id.receiveText);
         if(receiveTextView == null) {
@@ -121,9 +150,5 @@ public class CommunicationFragment extends Fragment {
         fragmentManager.setFragmentResult("MyNcsLocationForCarInfo",ncsLocation);
 
         return true;
-    }
-
-    public void setCommunicationService(CommunicationService communicationService) {
-        this.communicationService = communicationService;
     }
 }

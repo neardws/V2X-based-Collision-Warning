@@ -20,7 +20,7 @@ import com.linmu.collision_warning_system.fragment.CarInfoFragment;
 import com.linmu.collision_warning_system.fragment.CommunicationFragment;
 import com.linmu.collision_warning_system.fragment.MapFragment;
 import com.linmu.collision_warning_system.fragment.MyFragmentAdapter;
-import com.linmu.collision_warning_system.services.CarManageService;
+import com.linmu.collision_warning_system.fragment.OfflineMapFragment;
 import com.linmu.collision_warning_system.services.CommunicationService;
 import com.linmu.collision_warning_system.services.NcsLocationService;
 
@@ -32,7 +32,6 @@ public class MainActivity extends FragmentActivity {
     private Context context;
     // 碎片标签
     private static final String sNormalFragmentTag = "map_fragment";
-    private CommunicationFragment mCommunicationFragment;
     private CommunicationService communicationService;
     private NcsLocationService ncsLocationService;
 
@@ -46,21 +45,20 @@ public class MainActivity extends FragmentActivity {
         initPermissions();
         setContentView(R.layout.activity_main);
 
+        // 创建通信服务
+        CommunicationService.initConfig(context);
+        communicationService = CommunicationService.getInstance();
+
+        // 初始化 NCS 定位服务
+        NcsLocationService.setCommunicationService(communicationService);
+        ncsLocationService = NcsLocationService.getInstance();
+
         // 初始化 pageview
         initPager();
         // 初始化地图碎片
         initMapFragment();
 
-        // 创建通信服务
-        communicationService = new CommunicationService(context);
-        mCommunicationFragment.setCommunicationService(communicationService);
-
-        // 初始化 NCS 定位服务
-        ncsLocationService = new NcsLocationService(communicationService);
         ncsLocationService.checkNcsState();
-        ncsLocationService.loginNcs();
-
-
     }
 
     @Override
@@ -86,8 +84,9 @@ public class MainActivity extends FragmentActivity {
         List<Fragment> list = new ArrayList<>();
         list.add(CarInfoFragment.newInstance());
         list.add(CommunicationFragment.newInstance());
-        //TODO 这里必须创建完后获取，具体原因待测试
-        mCommunicationFragment = (CommunicationFragment) list.get(1);
+//        list.add(OfflineMapFragment.newInstance());
+        CommunicationFragment communicationFragment = (CommunicationFragment) list.get(1);
+        communicationFragment.initCommunication();
 
         MyFragmentAdapter myFragmentAdapter = new MyFragmentAdapter(getSupportFragmentManager(),getLifecycle(),list);
         ViewPager2 viewPager = findViewById(R.id.viewpage2);
