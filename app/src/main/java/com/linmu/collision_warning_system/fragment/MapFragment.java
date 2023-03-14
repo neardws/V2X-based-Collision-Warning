@@ -22,6 +22,7 @@ import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.utils.CoordinateConverter;
 import com.linmu.collision_warning_system.R;
 import com.linmu.collision_warning_system.services.CarManageService;
 
@@ -143,11 +144,17 @@ public class MapFragment extends Fragment {
             throw new RuntimeException(e);
         }
         LatLng latLng = new LatLng(latitude,longitude);
+
+        CoordinateConverter coordinateConverter = new CoordinateConverter()
+                .from(CoordinateConverter.CoordType.GPS)
+                .coord(latLng);
+        latLng = coordinateConverter.convert();
+
         CarManageService.getCarSelf().addLatLatLngToDeque(latLng);
         MyLocationData locationData = new MyLocationData.Builder()
                 .direction((float) direction)
-                .latitude(latitude)
-                .longitude(longitude)
+                .latitude(latLng.latitude)
+                .longitude(latLng.longitude)
                 .build();
         mBaiduMap.setMyLocationData(locationData);
     }

@@ -58,7 +58,6 @@ public class CommunicationService {
 
     private CommunicationService() {}
 
-
     public void setReceiverHandler(Handler receiverHandler) {
         receiver.setHandler(receiverHandler);
     }

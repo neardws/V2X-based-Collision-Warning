@@ -82,9 +82,10 @@ public class MainActivity extends FragmentActivity {
     private void initPager() {
         //Fragment
         List<Fragment> list = new ArrayList<>();
-        list.add(CarInfoFragment.newInstance());
+        list.add(OfflineMapFragment.newInstance());
         list.add(CommunicationFragment.newInstance());
-//        list.add(OfflineMapFragment.newInstance());
+        list.add(CarInfoFragment.newInstance());
+
         CommunicationFragment communicationFragment = (CommunicationFragment) list.get(1);
         communicationFragment.initCommunication();
 
@@ -99,6 +100,7 @@ public class MainActivity extends FragmentActivity {
                 Log.d("position", ""+position);
             }
         });
+        viewPager.setCurrentItem(1);
     }
 
     /**
