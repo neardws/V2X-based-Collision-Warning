@@ -1,0 +1,102 @@
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+    body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;}
+    </style>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=IyzFOkFwYwCtoG3utdlGV4WowujknXGh"></script>
+    <title>route</title>
+    </head>
+    <body>
+      <!-- <button onclick="clear_overlay()">清除覆盖物</button> -->
+    <div id="allmap"></div>
+    </body>
+    </html>
+    <script type="text/javascript">
+  
+    var map = new BMap.Map("allmap");
+    var point = new BMap.Point(106.815363,29.745628);
+    map.centerAndZoom(point, 18);
+    map.enableScrollWheelZoom(); // 开启鼠标滚轮缩放
+    map.addControl(new BMap.ScaleControl()); // 添加比例尺控件
+
+
+   
+
+    function add_car_one_marker(lon,lat,id)
+    {
+      //alert(id+" "+typeof(id));
+      clear_car_overlay(id);
+      var point = new BMap.Point(lon,lat);
+      var carOneIcon = new BMap.Icon("E:/cws_v2/car_11.png", new BMap.Size(20, 29),{anchor:new BMap.Size(16, 32) });
+		  var marker = new BMap.Marker(point,{icon:carOneIcon});
+      marker.customData={carid:'1'}
+      //alert("添加车辆1marker") 
+		  map.addOverlay(marker);  
+    }
+
+    function add_car_two_marker(lon,lat,id)
+    {
+     // alert(id+" "+typeof(id));
+      clear_car_overlay(id);
+      var point = new BMap.Point(lon,lat);
+      var carTwoIcon = new BMap.Icon("E:/cws_v2/car_22.png", new BMap.Size(20, 28),{anchor:new BMap.Size(16, 32) });
+		  var marker = new BMap.Marker(point,{icon:carTwoIcon});
+      marker.customData={carid:'2'}
+      //alert("添加车辆2marker")
+		  map.addOverlay(marker);  
+    }
+
+    // function clear_car1_overlay()
+    // {
+    //   alert("删除第一辆车的marker")
+    //   let all=map.getOverlays();
+    //   alert("当前的marker有："+all);
+
+    //   all.map(item=>{
+    //     alert(item.customData.carid+"  "+typeof(item.customData.carid))
+    //     alert(item.customData.carid+" is "+item.customData.carid ==='a')
+    //       if (item.customData.carid ==='a') {
+    //         alert("已删除车辆1");
+    //           this.map.removeOverlay(item);
+    //       }
+    //   })
+    // }
+
+    // function clear_car2_overlay()
+    // {
+    //   alert("删除第二辆车的marker")
+    //   let all=map.getOverlays();
+    //   alert("当前的marker有："+all);
+    //   all.map(item=>{
+    //     alert(item.customData.carid+"  "+typeof(item.customData.carid))
+    //     alert(item.customData.carid+" is "+item.customData.carid ==='2')
+    //       if (item.customData.carid ==='2') {
+    //         alert("已删除车辆2");
+    //           this.map.removeOverlay(item);
+              
+    //       }
+    //   })
+    // }
+
+    function clear_car_overlay(id)
+    {
+      //alert("删除id="+id+"的marker");
+      let all=map.getOverlays();
+      //alert("当前的marker有："+all);
+      all.map(item=>{
+        //alert(item.customData.carid+"  "+typeof(item.customData.carid))
+          if (item.customData.carid == id) {
+           // alert("已删除车辆"+id);
+              this.map.removeOverlay(item);
+              
+          }
+      })
+    }
+
+    function send(){
+            map.clearOverlays();
+            }
+
+    </script>
+    

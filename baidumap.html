@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<style type="text/css">
+	body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
+	</style>
+	<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=mvGGftgHDAXtWGxxiSy9ZjlWv4dKLHwQ"></script>
+	<title>地图展示</title>
+</head>
+<body>
+	<div id="allmap"></div>
+</body>
+</html>
+<!-- <script src="baiduTilesInfo.js"></script>  -->
+<script src="qwebchannel.js"></script>
+<script type="text/javascript">
+
+	// 百度地图API功能
+	var map = new BMap.Map("allmap", {enableMapClick:false});// 创建Map实例，关闭底图可点功能
+	map.centerAndZoom(new BMap.Point(106.815363,29.745628), 15);  // 初始化地图,设置中心点坐标和地图级别
+	
+	//添加缩放按钮
+	var top_left_control = new BMap.ScaleControl({anchor: BMAP_ANCHOR_TOP_LEFT});// 左上角，添加比例尺
+	var top_left_navigation = new BMap.NavigationControl();  //左上角，添加默认缩放平移控件
+	map.addControl(top_left_control);        
+	map.addControl(top_left_navigation);     
+	
+	//添加地图类型控件
+	map.addControl(new BMap.MapTypeControl(
+	{
+		mapTypes:[
+            BMAP_NORMAL_MAP,
+            BMAP_HYBRID_MAP
+        ]
+	}));	  
+	map.setCurrentCity("北京");          // 设置地图显示的城市 此项是必须设置的
+	map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
+
+  
+// add windowinfo
+    function add_InfoWindow(x,y)
+	{
+		var opts = {    
+        width : 250,     // 信息窗口宽度    
+        height: 100,     // 信息窗口高度    
+        title : "Hello"  // 信息窗口标题   
+        }    
+        var infoWindow = new BMap.InfoWindow("World", opts);  // 创建信息窗口对象    
+        map.openInfoWindow(infoWindow, map.getCenter());      // 打开信息窗口
+
+        var point= new BMap.Point(x, y);
+		map.addOverlay(infoWindow);                 // 加载标注
+	    //map.setCenter(point); //设置中心点
+		
+		translateCallback = function (data)
+		{
+			if(data.status === 0) 
+			{
+				var pt = new BMap.Point(x, y);
+				var infoWindow = new BMap.infoWindow("World", opts);  
+				map.addOverlay(infoWindow);  
+				map.centerAndZoom(new BMap.Point(x, y), 10);
+			} 
+		}
+		setTimeout(function()
+		{  
+			//GPS转百度坐标
+			var convertor = new BMap.Convertor();
+			var pointArr = [];
+			pointArr.push(new BMap.Point(x,y));
+			convertor.translate(pointArr, 1, 5, translateCallback)   //;
+		}, 100); 
+	}
+		// 复杂的自定义覆盖物http://www.bigemap.com/mapoffline/bmap/create_overlay.html
+    function ComplexCustomOverlay(point, text, mouseoverText){
+      this._point = point;
+      this._text = text;
+      this._overText = mouseoverText;
+    }
+ 
+    ComplexCustomOverlay.prototype = new BMap.Overlay();
+    ComplexCustomOverlay.prototype.initialize = function(map){
+      this._map = map;
+      var div = this._div = document.createElement("div");
+      div.style.position = "absolute";
+      div.style.zIndex = BMap.Overlay.getZIndex(this._point.lat);
+      div.style.backgroundColor = "#EE5D5B";
+      div.style.border = "1px solid #BC3B3A";
+      div.style.color = "white";
+      div.style.height = "18px";
+      div.style.padding = "2px";
+      div.style.lineHeight = "18px";
+      div.style.whiteSpace = "nowrap";
+      div.style.MozUserSelect = "none";
+      div.style.fontSize = "12px"
+      var span = this._span = document.createElement("span");
+      div.appendChild(span);
+      span.appendChild(document.createTextNode(this._text));      
+      var that = this;
+
+      var arrow = this._arrow = document.createElement("div");
+      arrow.style.background = "url(//map.baidu.com/fwmap/upload/r/map/fwmap/static/house/images/label.png) no-repeat";
+      arrow.style.position = "absolute";
+      arrow.style.width = "11px";
+      arrow.style.height = "10px";
+      arrow.style.top = "22px";
+      arrow.style.left = "10px";
+      arrow.style.overflow = "hidden";
+      div.appendChild(arrow);
+     
+      div.onmouseover = function(){
+        this.style.backgroundColor = "#6BADCA";
+        this.style.borderColor = "#0000ff";
+        this.getElementsByTagName("span")[0].innerHTML = that._overText;
+        arrow.style.backgroundPosition = "0px -20px";
+      }
+
+      div.onmouseout = function(){
+        this.style.backgroundColor = "#EE5D5B";
+        this.style.borderColor = "#BC3B3A";
+        this.getElementsByTagName("span")[0].innerHTML = that._text;
+        arrow.style.backgroundPosition = "0px 0px";
+      }
+
+      map.getPanes().labelPane.appendChild(div);
+      
+      return div;
+    }
+    ComplexCustomOverlay.prototype.draw = function(){
+      var map = this._map;
+      var pixel = map.pointToOverlayPixel(this._point);
+      this._div.style.left = pixel.x - parseInt(this._arrow.style.left) + "px";
+      this._div.style.top  = pixel.y - 30 + "px";
+    }
+	// add windowinfo
+    function add_CompOverlay(x,y,info)
+	{
+     
+      var myCompOverlay = new ComplexCustomOverlay(new BMap.Point(x,y), info,info);
+
+       map.addOverlay(myCompOverlay);
+	    //map.setCenter(point); //设置中心点
+	 
+		setTimeout(function()
+		{  
+			//GPS转百度坐标
+			var convertor = new BMap.Convertor();
+			var pointArr = [];
+			pointArr.push(new BMap.Point(x,y));
+			convertor.translate(pointArr, 1, 5, translateCallback)   //;
+		}, 100); 
+	}
+	//添加点标注
+	function add_Point(x,y)
+	{ 
+	     var point= new BMap.Point(x, y);
+	     var marker = new BMap.Marker(point); // 创建点
+	     map.addOverlay(marker);                 // 加载标注
+	     map.setCenter(point); //设置中心点
+		
+		translateCallback = function (data)
+		{
+			if(data.status === 0) 
+			{
+				var pt = new BMap.Point(x, y);
+				var marker = new BMap.Marker(pt);  
+				map.addOverlay(marker);  
+				map.centerAndZoom(new BMap.Point(x, y), 10);
+			} 
+		}
+		setTimeout(function()
+		{  
+			//GPS转百度坐标
+			var convertor = new BMap.Convertor();
+			var pointArr = [];
+			pointArr.push(new BMap.Point(x,y));
+			convertor.translate(pointArr, 1, 5, translateCallback)   ////1表示84坐标，3表示google坐标，5表示百度坐标;
+		}, 100); 
+	}
+//添加 .ico  
+	function add_Ico(x,y)
+	{ 
+		// var myIcon = new BMap.Icon("airplane48.ico", new BMap.Size(-0.0000001,-0.0000001));
+		// var marker = new BMap.Marker(pt,{icon:myIcon});  
+		var pt = new BMap.Point(x, y);
+		var marker = new BMap.Marker(pt,{icon:new BMap.Icon("poi-marker-2.png", new BMap.Size(-0.0000001,-0.0000001),{
+				anchor: new BMap.Size(2, 3)  //偏移
+		})}); 
+		map.addOverlay(marker);  	      
+	}
+	//添加 三角箭头
+	function add_Vector(x,y)
+	{		
+		var vectorFCArrow = new BMap.Marker(new BMap.Point(x,y), {		
+		icon: new BMap.Symbol(BMap_Symbol_SHAPE_FORWARD_CLOSED_ARROW, {// 初始化方向向上的闭合箭头
+			scale: 3,
+			strokeWeight: 1,
+			rotation: 0,//顺时针旋转30度
+			fillColor: 'red',
+			fillOpacity: 0.8
+		})
+		});
+		map.addOverlay(vectorFCArrow);
+		vectorFCArrow.show()	;
+		//vectorFCArrow.hide()
+	}
+	function showAlert() 
+	{
+        alert('this is web alert');
+	}
+
+	//long, lat GPS坐标  这里经过了GPS转BD09的过程
+	function addmarker(x,y)
+	{ 
+		translateCallback = function (data)
+		{
+			if(data.status === 0) 
+			{
+				var marker = new BMap.Marker(data.points[0],{icon:new BMap.Icon("poi-marker-1.png", new BMap.Size(-0.0000001,-0.0000001))});  // 创建标注	
+				var label = new BMap.Label(x+","+y+",",{offset:new BMap.Size(20,-10)});
+				marker.setLabel(label);			
+				map.addOverlay(marker);  
+			} 
+		}
+		setTimeout(function()
+		{  
+			//GPS转百度坐标
+			var convertor = new BMap.Convertor();
+			var pointArr = [];
+			pointArr.push(new BMap.Point(x,y));
+			convertor.translate(pointArr, 1, 5, translateCallback)   //;
+		}, 100);  
+	}
+
+	 function addmarkerEx(x,y,info)
+	{ 
+		
+		translateCallback = function (data)
+		{
+			
+			if(data.status === 0) 
+			{
+				//removeOverlays();
+				//var marker = new BMap.Marker(data.points[0],{icon:new BMap.Icon("poi-marker-1.png", new BMap.Size(-0.0000001,-0.0000001))});  // 创建标注	
+				//var point= new BMap.Point(x, y);
+				var marker = new BMap.Marker(data.points[0]); // 创建点
+				var label = new BMap.Label("lon:"+x+", lat:"+y+"<br>"+info,{offset:new BMap.Size(20,-10)});
+				marker.setLabel(label);			
+				map.addOverlay(marker);  
+			} 
+		}
+		setTimeout(function()
+		{  
+			//GPS转百度坐标
+			var convertor = new BMap.Convertor();
+			var pointArr = [];
+			pointArr.push(new BMap.Point(x,y));
+			convertor.translate(pointArr, 1, 5, translateCallback)   //;
+		}, 100);  
+	}
+
+	function removeOverlays()
+    {
+        var allOverlay=map.getOverlays();
+        if (allOverlay.length) {
+                for (var i=0; i < allOverlay.length; i++) {
+                    if(allOverlay[i].toString() == "[object Marker]"){
+                        map.removeOverlay(allOverlay[i]);
+                    }
+                }
+            }
+    }
+	
+	// QT交互********************************************* 
+	new QWebChannel(qt.webChannelTransport, function(channel) 
+	{
+        window.bridge_js = channel.objects.bridge_name;  //bridge_name 与QT 中一致
+        //window.bridge_js.sigYourName.connect( function(name) {alert(name);} );
+    });
+	// map.addEventListener("click", function (e) 
+	// {
+	// 	//alert(e.point.lng + "," + e.point.lat);
+	// 	bridge_js.getCoordinate(e.point.lng, e.point.lat);
+	// });
+</script>
+<!--
+
+-->

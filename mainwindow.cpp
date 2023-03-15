@@ -1,27 +1,52 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "mybridgeofjs.h"
+
+#include <QPushButton>
+#include <QLineEdit>
+#include <QDoubleSpinBox>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGridLayout>
+#include <QDir>
+#include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QStringList>
+#include <QJsonArray>
+#include<QString>
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->axWidget->setControl(QString::fromUtf8("{8856F961-340A-11D0-A96B-00C04FD705A2}"));//注册组件ID
-    ui->axWidget->setProperty("DisplayAlerts",false);//不显示警告信息
-    ui->axWidget->setProperty("DisplayScrollBars",true);//不显示滚动条
-    //QString webstr=QString("file:///E:/map/mymap.html");//设置要打开的网页
-    QString webstr=QString("https://map.baidu.com/@11861286,3423481,13z");//设置要打开的网页
-    ui->axWidget->dynamicCall("Navigate(const QString&)",webstr);//显示网页
-}
+    resize(800,1024);
 
-//获取时间戳
-qint64 MainWindow::getTime()
-{
-    //获取当前时间
-    QDateTime dateTime = QDateTime::currentDateTime();
-    //转换为毫秒
-    qint64 epochTime = dateTime.toMSecsSinceEpoch();
-    return epochTime;
+    //加载百度地图界面相关
+    m_pWebView = new QWebEngineView(this);
+        // 关闭自动代理
+    QNetworkProxyFactory::setUseSystemConfiguration(false);
+        //创建通道对象用于与JS交互
+    m_pWebchannel = new QWebChannel(this);
+    MybridgeofJS *mybride = new MybridgeofJS();
+    m_pWebchannel->registerObject("bridge_name",(QObject*)mybride);
+    m_pWebView->page()->setWebChannel(m_pWebchannel);
+        //载入百度地图地址
+    QDir temDir("../cws_v2/trace.html");
+    QString absDir = temDir.absolutePath();
+    QString filePath = "file:///" + absDir;
+    qDebug()<<filePath;
+    //m_pWebView->page()->load(QUrl::fromLocalFile("E:/cws/baidumap.html"));
+    m_pWebView->page()->load(QUrl(filePath));
+    ui->vLayout_map->addWidget(m_pWebView);
+
+    //初始化udp
+   // mUDPSocket = new QUdpSocket(this);
+    myudp=new MyUDP;
+
+
 }
 
 MainWindow::~MainWindow()
@@ -29,71 +54,184 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-
-//绑定端口
-bool MainWindow::createConnection()
+void MainWindow::slotDealMsg()
 {
+    while(mUDPSocket->hasPendingDatagrams())
+    {
+        QByteArray datagram;
+        QHostAddress sender;
+        quint16 senderPort;
+        datagram.resize(mUDPSocket->pendingDatagramSize());
+        mUDPSocket->readDatagram(datagram.data(),datagram.size(),&sender,&senderPort);
 
-    bool isConnected = false;
-    //获取ip地址
-    localAddr.setAddress(ui->lineEdit_locIp->text());
+        qDebug() <<"datagram "<<datagram ;
+        ui->plainTextEdit->appendPlainText("from "+sender.toString()+":"+QString(datagram)+"\n");
 
-    //获取端口号
-    if (ui->lineEditSetPort->text() != ""){
-        localPort = ui->lineEditSetPort->text().toInt();
+        paseJSon(datagram);
+
     }
-
-    //绑定端口,并返回是否绑定成功
-    isConnected = handleudp->bindPort(localAddr, localPort);
-    return isConnected;
 }
 
-
-void MainWindow::on_btn_start_clicked()
+void MainWindow::on_pushButton_clicked()
 {
-    if(isUdpStarted){
-        emit newLogInfo("UDP线程已启动。");
-    } else{
-        disconnect(ui->btn_start, SIGNAL(clicked()), this, SLOT(on_btn_start_clicked()()));
+    //mUDPSocket = new QUdpSocket(this);
+    //udp
+    //绑定
+    udpListenPort = ui->lineEdit_Port->text().toInt();
+    localAddr.setAddress(ui->lineEdit_IP->text());
+    qDebug()<<localAddr<<"+"<<udpListenPort;
+    myudp->bindPort(localAddr,udpListenPort);
+    connect(myudp, SIGNAL(newMessage(QString, QJsonObject)), this, SLOT(onUdpAppendMessage(QString, QJsonObject)));
+    //mUDPSocket->bind(mServerPort);
 
-        //开始监听，调用createConnection绑定端口创建连接
-        if(createConnection()){
-            //ui->textLog->appendPlainText("UDP正在监听 "+ localAddr.toString()+ ":"+ QString::number(localPort));
-            //重新绑定槽函数
-            connect(ui->btn_start, SIGNAL(clicked()),this,SLOT(onUdpStopButtonClicked()));
-            //当点击开始监听之后，按钮名改为"停止监听"
-            ui->btn_start->setText("停止监听");
+    //qDebug() << mServerPort;
+   // connect(mUDPSocket, &QUdpSocket::readyRead, this, &MainWindow::slotDealMsg,Qt::UniqueConnection);
+//    mAllCarInfo.push_back(carinfo);
+ui->pushButton->setEnabled(false);
+}
 
-            //绑定接收到消息的槽函数
-            connect(handleudp, SIGNAL(newMessage(QString, QJsonObject)), this, SLOT(onUdpAppendMessage(QString, QJsonObject)));
+void MainWindow::onUdpAppendMessage(const QString &from, const QJsonObject &message){
+
+        //解析json格式的数据
+        double         id               = message.find("id").value().toDouble();
+        //emit newLogInfo(message.find("id").value().toString()+"发来一条普通消息");
+        double   timeStamp        = message.find("timeStamp").value().toDouble();
+        double       direction        = message.find("direction").value().toDouble();
+        double      lat              = message.find("lat").value().toDouble();
+        double      lon              = message.find("lon").value().toDouble();
+        double       speed            = message.find("speed").value().toDouble();
+        double      acc              = message.find("acc").value().toDouble();
+
+        //展示信息在页面上
+        ui->plainTextEdit->appendPlainText("id="+QString::number(id));
+        ui->plainTextEdit->appendPlainText("lat="+QString::number(lat,10,10));
+        ui->plainTextEdit->appendPlainText("lon="+QString::number(lon,10,10));
+        ui->plainTextEdit->appendPlainText("acc="+QString::number(acc,10,10));
+        ui->plainTextEdit->appendPlainText("timeStamp="+QString::number(timeStamp));
+
+        if(id==1)
+        {
+            ui->lineEdit_car1_lon->setText(QString::number(lon,10,6));
+            ui->lineEdit_car1_lat->setText(QString::number(lat,10,6));
+            ui->lineEdit_car1_vel->setText(QString::number(speed,10,6));
+            ui->lineEdit_car1_acc->setText(QString::number(acc,10,6));
         }
-        else{
-            //ui->textLog->appendPlainText("UDP监听失败:"+ localAddr.toString()+ ":"+ QString::number(localPort));
-            connect(ui->btn_start, SIGNAL(clicked()), this, SLOT(on_btn_start_clicked()()));
+        else if(id==2)
+        {
+            ui->lineEdit_car2_lon->setText(QString::number(lon,10,6));
+            ui->lineEdit_car2_lat->setText(QString::number(lat,10,6));
+            ui->lineEdit_car2_vel->setText(QString::number(speed,10,6));
+            ui->lineEdit_car2_acc->setText(QString::number(acc,10,6));
         }
-        isUdpStarted = true;
-    }
+
+       if(id==1)
+       {
+            //第一次全局清除
+           if(initial)
+           {
+               //   清除上一次的点
+               QString str = "send()";
+               m_pWebView->page()->runJavaScript(str);
+
+               //把要调用的JS命令当做QString传递给网页
+               QString cmd = QString("add_car_one_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
+               qDebug() << cmd;
+               //实现QT通过C++调用JS函数
+               m_pWebView->page()->runJavaScript(cmd);
+               initial=0;
+           }
+           else
+           {
+               //把要调用的JS命令当做QString传递给网页
+               QString cmd = QString("add_car_one_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
+               qDebug() << cmd;
+               //实现QT通过C++调用JS函数
+               m_pWebView->page()->runJavaScript(cmd);
+           }
+
+       }
+       else if(id==2)
+       {
+           //第一次全局清除
+           if(initial)
+           {
+               //   清除上一次的点
+               QString str = "send()";
+               m_pWebView->page()->runJavaScript(str);
+
+               //把要调用的JS命令当做QString传递给网页
+               QString cmd = QString("add_car_two_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
+               qDebug() << cmd;
+               //实现QT通过C++调用JS函数
+               m_pWebView->page()->runJavaScript(cmd);
+               initial=0;
+           }
+           else
+           {
+               //把要调用的JS命令当做QString传递给网页
+               QString cmd = QString("add_car_two_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
+               qDebug() << cmd;
+               //实现QT通过C++调用JS函数
+               m_pWebView->page()->runJavaScript(cmd);
+
+           }
+
+       }
+
+        emit newMessage(message);
 }
 
-void MainWindow::onUdpStopButtonClicked(){
-    if (isUdpStarted){
-        //如果udp在启动中就解除连接
-        disconnect(ui->btn_start, SIGNAL(clicked()), this, SLOT(onUdpStopButtonClicked()));
-        //ui->textLog->appendPlainText("UDP 停止监听.");
-        //解除槽函数绑定
-        disconnect(handleudp, SIGNAL(newMessage(QString, QJsonObject)), this, SLOT(onUdpAppendMessage(QString, QJsonObject)));
-        ui->btn_start->setText("开始监听");
-        handleudp->unbindPort();
-        //重新绑定槽函数
-        connect(ui->btn_start, SIGNAL(clicked()), this, SLOT(on_btn_start_clicked()));
-        isUdpStarted = false;
-    } else{
-        emit newLogInfo("UDP线程已停止。");
-    }
 
-}
-
-void MainWindow::onUdpAppendMessage(const QString &from, const QJsonObject &message)
+void MainWindow::paseJSon(QByteArray all)
 {
+
+    QJsonDocument doc = QJsonDocument::fromJson(all);
+
+     QJsonArray array = doc.array();
+
+     //bool setMarker = true;
+     if(!array.empty())
+     {
+         foreach(auto var , array)
+         {
+           CarInfoStruct info;
+
+           QJsonObject obj = var.toObject();// var.Object()
+           QStringList keys = obj.keys();//得到所有key
+           for (int i = 0; i < keys.size(); i++)
+           {
+               QString key = keys.at(i);
+               QJsonValue value = obj.value(key);
+               if(0==key.compare("lon"))
+               {
+                   info.lon = value.toDouble();
+                   QString lon = QString::number(info.lon,'f',10);
+                   qDebug()<<lon;
+               }
+               else if(0==key.compare("lat")){
+                   info.lat = value.toDouble();
+               }
+               else if(0==key.compare("speed")){
+                   info.speed = value.toDouble();
+               }
+               else if(0==key.compare("acc")){
+                   info.acc = value.toDouble();
+               }
+
+           }
+
+
+
+         QString winfo = QString("speed:%0  acc:%1 ").arg(info.speed).arg(info.acc);
+         qDebug() << winfo;
+
+        //把要调用的JS命令当做QString传递给网页
+        QString cmd = QString("addmarkerEx(%0,%1,'%2')").arg(info.lon).arg(info.lat).arg(winfo);
+        qDebug() << cmd;
+
+        //实现QT通过C++调用JS函数
+        m_pWebView->page()->runJavaScript(cmd);
+     }
+    }
 
 }

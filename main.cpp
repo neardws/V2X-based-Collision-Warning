@@ -1,11 +1,13 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include <QApplication>
-
+#include <QDesktopWidget>
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
-    w.setWindowTitle("C-V2X车辆碰撞预警系统");
+    //w.showMaximized();
+    QDesktopWidget *desktop = QApplication::desktop();
+    //w.move((desktop->width() - w.width())/ 2, (desktop->height() - w.height()) /2);
     w.show();
 
     return a.exec();
