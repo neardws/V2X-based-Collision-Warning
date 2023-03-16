@@ -34,12 +34,12 @@ MainWindow::MainWindow(QWidget *parent) :
     m_pWebchannel->registerObject("bridge_name",(QObject*)mybride);
     m_pWebView->page()->setWebChannel(m_pWebchannel);
         //载入百度地图地址
-    QDir temDir("../cws_v2/trace.html");
-    QString absDir = temDir.absolutePath();
-    QString filePath = "file:///" + absDir;
-    qDebug()<<filePath;
-    //m_pWebView->page()->load(QUrl::fromLocalFile("E:/cws/baidumap.html"));
-    m_pWebView->page()->load(QUrl(filePath));
+   // QDir temDir("../V2X-based-Collision-Warning/trace.html");
+//    QString absDir = temDir.absolutePath();
+//    QString filePath = "file:///" + absDir;
+//    qDebug()<<filePath;
+    m_pWebView->page()->load(QUrl::fromLocalFile("D:/resource/trace.html"));
+    //m_pWebView->page()->load(QUrl(filePath));
     ui->vLayout_map->addWidget(m_pWebView);
 
     //初始化udp
@@ -92,41 +92,55 @@ ui->pushButton->setEnabled(false);
 
 void MainWindow::onUdpAppendMessage(const QString &from, const QJsonObject &message){
 
-        //解析json格式的数据
-        double         id               = message.find("id").value().toDouble();
-        //emit newLogInfo(message.find("id").value().toString()+"发来一条普通消息");
-        double   timeStamp        = message.find("timeStamp").value().toDouble();
-        double       direction        = message.find("direction").value().toDouble();
+    //将jsonObeject转换成可以被输出到日志框的格式
+    QJsonDocument document;
+    document.setObject(message);
+    QByteArray message_array = document.toJson(QJsonDocument::Compact);
+    QString simpjson_str(message_array);
+
+
+        //解析json格式的各项数据信息
+        QString         id               = message.find("device_id").value().toString();
+        double   timeStamp        = message.find("current_time").value().toDouble();
+        double       direction        = message.find("hea").value().toDouble();
         double      lat              = message.find("lat").value().toDouble();
         double      lon              = message.find("lon").value().toDouble();
-        double       speed            = message.find("speed").value().toDouble();
-        double      acc              = message.find("acc").value().toDouble();
+        double       speed            = message.find("spd").value().toDouble();
 
-        //展示信息在页面上
-        ui->plainTextEdit->appendPlainText("id="+QString::number(id));
-        ui->plainTextEdit->appendPlainText("lat="+QString::number(lat,10,10));
-        ui->plainTextEdit->appendPlainText("lon="+QString::number(lon,10,10));
-        ui->plainTextEdit->appendPlainText("acc="+QString::number(acc,10,10));
-        ui->plainTextEdit->appendPlainText("timeStamp="+QString::number(timeStamp));
 
-        if(id==1)
+        //打印json的完整信息在日志框中
+        ui->plainTextEdit->appendPlainText(QString::fromLocal8Bit("接收id=")+id+QString::fromLocal8Bit("传来的信息:")+simpjson_str);
+
+
+        //展示车辆1的信息
+        if(id=="1")
         {
+
+            ui->lineEdit_car1_id->setText(id);
             ui->lineEdit_car1_lon->setText(QString::number(lon,10,6));
             ui->lineEdit_car1_lat->setText(QString::number(lat,10,6));
             ui->lineEdit_car1_vel->setText(QString::number(speed,10,6));
-            ui->lineEdit_car1_acc->setText(QString::number(acc,10,6));
+            ui->lineEdit_car1_hea->setText(QString::number(direction,10,6));
+            ui->lineEdit_car1_timestamp->setText(QString::number(timeStamp));
         }
-        else if(id==2)
+        //展示车辆2的信息
+        else if(id=="2")
         {
+
+            ui->lineEdit_car2_id->setText(id);
             ui->lineEdit_car2_lon->setText(QString::number(lon,10,6));
             ui->lineEdit_car2_lat->setText(QString::number(lat,10,6));
             ui->lineEdit_car2_vel->setText(QString::number(speed,10,6));
-            ui->lineEdit_car2_acc->setText(QString::number(acc,10,6));
+            ui->lineEdit_car2_hea->setText(QString::number(direction,10,6));
+            ui->lineEdit_car2_timestamp->setText(QString::number(timeStamp));
         }
 
-       if(id==1)
+        //给车辆1在地图上标点
+       if(id=="1")
        {
             //第一次全局清除
+
+
            if(initial)
            {
                //   清除上一次的点
@@ -150,7 +164,8 @@ void MainWindow::onUdpAppendMessage(const QString &from, const QJsonObject &mess
            }
 
        }
-       else if(id==2)
+       //给车辆2在地图上标点
+       else if(id=="2")
        {
            //第一次全局清除
            if(initial)
