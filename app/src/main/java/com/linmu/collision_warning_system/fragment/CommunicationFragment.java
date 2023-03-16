@@ -1,9 +1,6 @@
 package com.linmu.collision_warning_system.fragment;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,13 +12,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
-import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.R;
-import com.linmu.collision_warning_system.services.CarManageService;
 import com.linmu.collision_warning_system.services.CommunicationService;
-import com.linmu.collision_warning_system.services.NcsLocationService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -53,6 +46,7 @@ public class CommunicationFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getParentFragmentManager().setFragmentResultListener("NcsLog", this, this::doHandleNcsLog);
     }
 
     @Override
@@ -82,86 +76,18 @@ public class CommunicationFragment extends Fragment {
         communicationService.sentMessage(-1,jsonObject);
     }
 
-    public void initCommunication() {
-        this.communicationService = CommunicationService.getInstance();
-        // 接受消息的 handler，具体处理放在 doHandleReceiveMessage
-        Handler receiverHandler = new Handler(Looper.getMainLooper(), this::doHandleReceiveMessage);
-        this.communicationService.setReceiverHandler(receiverHandler);
-    }
-
-
-    private boolean doHandleReceiveMessage(Message msg) {
-        boolean handleRes;
-        switch (msg.what) {
-            case 1111: {
-                handleRes = NcsLocationService.getInstance().doHandleReceiveOnceMessage(msg);
-                return handleRes;
-            }
-            case 2222: {
-                handleRes = doHandleLocationMessage(msg);
-                return handleRes;
-            }
-        }
-        return false;
-    }
-
-    private boolean doHandleLocationMessage(Message msg) {
-        JSONObject resJsonObject = (JSONObject) msg.obj;
-        if(CarManageService.getCarSelf() == null) {
-            Log.w("doHandleReceiveMessage", "本车还没有完成初始化! 拒绝处理接收消息!");
-            return false;
-        }
-        Log.i("handleMessage", String.format("doHandleReceiverMessage: %s",resJsonObject.toString()));
-
-        // 解析数据包
-        int tag;
-        JSONObject data;
-        String obuId;
-        double latitude,longitude,direction,speed;
-        try {
-            tag = resJsonObject.getInt("tag");
-            if(tag == 2101) {
-                data = resJsonObject.getJSONObject("data");
-                obuId = data.getString("device_id");
-                latitude = data.getDouble("lat");
-                longitude = data.getDouble("lon");
-                direction = data.getDouble("hea");
-                speed = data.getDouble("spd");
-            }
-            else if (tag == 2102){
-                // TODO 多车位置处理
-                return true;
-            }
-            else {
-                Log.e("doHandleReceiveMessage", "无法处理的tag");
-                return false;
-            }
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        CarManageService.updateCarSelf(new LatLng(latitude,longitude), (float) speed, (float) direction);
-
-        if(this.inputEditText == null) {
-            return false;
-        }
+    private void doHandleNcsLog(String requestKey,Bundle result) {
+        String res = result.getString("log");
         // 更新接收消息页
         TextView receiveTextView = this.requireView().findViewById(R.id.receiveText);
         if(receiveTextView == null) {
             Log.e("doHandleReceiveMessage", "receiveTextView 为空!");
-            return false;
+            return;
         }
-        receiveTextView.setText(resJsonObject.toString());
+        receiveTextView.setText(res);
+    }
 
-        Bundle ncsLocation = new Bundle();
-
-        ncsLocation.putString("LocationData",data.toString());
-        FragmentManager fragmentManager = getParentFragmentManager();
-        fragmentManager.setFragmentResult("MyNcsLocationForMap",ncsLocation);
-
-        Bundle ncsCarInfoUpdateSignal = new Bundle();
-        ncsCarInfoUpdateSignal.putString("obu_id",obuId);
-        fragmentManager.setFragmentResult("MyNcsLocationForCarInfo",ncsCarInfoUpdateSignal);
-
-        return true;
+    public void initCommunication() {
+        this.communicationService = CommunicationService.getInstance();
     }
 }

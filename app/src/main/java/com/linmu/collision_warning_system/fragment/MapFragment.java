@@ -23,11 +23,9 @@ import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.utils.CoordinateConverter;
+import com.linmu.collision_warning_system.Entry.Car;
 import com.linmu.collision_warning_system.R;
 import com.linmu.collision_warning_system.services.CarManageService;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,7 +60,7 @@ public class MapFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getParentFragmentManager().setFragmentResultListener("MyNcsLocationForMap", this, this::doHandleNcsLocation);
+        getParentFragmentManager().setFragmentResultListener("NcsLocationForMap", this, this::doHandleNcsLocation);
     }
 
     @Override
@@ -133,17 +131,12 @@ public class MapFragment extends Fragment {
             initPolyLine();
             firstLocation = false;
         }
-        String dataString = result.getString("LocationData");
-        double latitude,longitude,direction;
-        try {
-            JSONObject data = new JSONObject(dataString);
-            latitude = data.getDouble("lat");
-            longitude = data.getDouble("lon");
-            direction = data.getDouble("hea");
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        LatLng latLng = new LatLng(latitude,longitude);
+        String obu_id = result.getString("obu_id");
+
+
+        Car carSelf = CarManageService.getCarSelf();
+        LatLng latLng = carSelf.getLatLng();
+        double direction = carSelf.getDirection();
 
         CoordinateConverter coordinateConverter = new CoordinateConverter()
                 .from(CoordinateConverter.CoordType.GPS)
@@ -157,6 +150,7 @@ public class MapFragment extends Fragment {
                 .longitude(latLng.longitude)
                 .build();
         mBaiduMap.setMyLocationData(locationData);
+        drawUpdatePolyLine();
     }
     /**
      * 初始化路径纹理
@@ -172,7 +166,6 @@ public class MapFragment extends Fragment {
                         .dottedLine(true)
                         .zIndex(3);
         mPolyline = (Polyline) mBaiduMap.addOverlay(polylineOptions);
-        drawUpdatePolyLine();
     }
     /**
      * 更新&绘制路径

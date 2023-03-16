@@ -56,7 +56,7 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        communicationService.sentAndReceive(50502,askNcsState);
+        communicationService.sentAndReceive(askNcsState);
     }
 
     public void loginNcs() {
@@ -72,7 +72,7 @@ public class NcsLocationService {
             logoutNcs();
             throw new RuntimeException(e);
         }
-        communicationService.sentAndReceive(50501,loginNcs);
+        communicationService.sentAndReceive(loginNcs);
     }
     private void doHandleStateCheckRes(JSONObject res) {
         String obuId;

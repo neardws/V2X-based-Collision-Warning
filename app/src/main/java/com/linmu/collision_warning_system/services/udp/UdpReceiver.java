@@ -62,18 +62,22 @@ public class UdpReceiver {
             throw new RuntimeException(e);
         }
 
-        Log.i("receivedMessage", String.format("ReceiveThread: jsonObject: %s",jsonObject));
+        Log.i("MyLogTag", String.format("ReceiveThread: \n jsonObject: %s",jsonObject));
 
         return jsonObject;
     }
 
-    public void receiveOnce(DatagramSocket socket) throws RemoteException, IOException {
-
+    public void receiveOnce(int port) throws RemoteException, IOException {
+        // 创建通信
+        DatagramSocket socket = new DatagramSocket(port);
         JSONObject jsonObject = receive(socket);
+        socket.close();
+
         if(mServer == null) {
             Log.e("receiveOnce", "Message Server 还没有初始化");
             return;
         }
+        // 将消息发送给主线程
         Message message = new Message();
         message.what = 1111;
         message.obj = jsonObject;
@@ -97,9 +101,7 @@ public class UdpReceiver {
             // 创建消息并发送
             Message receivedMessage = Message.obtain();
             receivedMessage.what = 2222;
-
             receivedMessage.obj = jsonObject;
-
             mServer.send(receivedMessage);
         }
         socket.close();

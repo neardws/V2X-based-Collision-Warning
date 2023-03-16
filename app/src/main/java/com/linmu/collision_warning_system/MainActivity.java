@@ -32,6 +32,8 @@ public class MainActivity extends FragmentActivity {
     private CommunicationService communicationService;
     private NcsLocationService ncsLocationService;
 
+    private FragmentManager fragmentManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,19 +44,22 @@ public class MainActivity extends FragmentActivity {
         initPermissions();
         setContentView(R.layout.activity_main);
 
-        // 创建通信服务
-        CommunicationService.initConfig(context);
-        communicationService = CommunicationService.getInstance();
-
-        // 初始化 NCS 定位服务
-        NcsLocationService.setCommunicationService(communicationService);
-        ncsLocationService = NcsLocationService.getInstance();
+        fragmentManager = getSupportFragmentManager();
 
         // 初始化 pageview
         initPager();
         // 初始化地图碎片
         initMapFragment();
 
+        // 创建通信服务
+        CommunicationService.initConfig(context,fragmentManager);
+        communicationService = CommunicationService.getInstance();
+
+        // 初始化 NCS 定位服务
+        NcsLocationService.setCommunicationService(communicationService);
+        ncsLocationService = NcsLocationService.getInstance();
+
+        // TODO 添加循环尝试登录
         ncsLocationService.checkNcsState();
     }
 
@@ -86,7 +91,7 @@ public class MainActivity extends FragmentActivity {
         CommunicationFragment communicationFragment = (CommunicationFragment) list.get(1);
         communicationFragment.initCommunication();
 
-        MyFragmentAdapter myFragmentAdapter = new MyFragmentAdapter(getSupportFragmentManager(),getLifecycle(),list);
+        MyFragmentAdapter myFragmentAdapter = new MyFragmentAdapter(fragmentManager,getLifecycle(),list);
         ViewPager2 viewPager = findViewById(R.id.viewpage2);
         viewPager.setAdapter(myFragmentAdapter);
         viewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {

@@ -48,7 +48,7 @@ public class CarInfoFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getParentFragmentManager().setFragmentResultListener("MyNcsLocationForCarInfo", this, this::doHandleNcsLocation);
+        getParentFragmentManager().setFragmentResultListener("NcsLocationForCarInfo", this, this::doHandleNcsLocation);
     }
 
     @Override
