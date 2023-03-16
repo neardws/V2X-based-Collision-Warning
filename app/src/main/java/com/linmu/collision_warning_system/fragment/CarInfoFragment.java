@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.linmu.collision_warning_system.Entry.Car;
 import com.linmu.collision_warning_system.R;
 import com.linmu.collision_warning_system.services.CarManageService;
 import com.txusballesteros.SnakeView;
@@ -66,19 +67,8 @@ public class CarInfoFragment extends Fragment {
     }
 
     private void doHandleNcsLocation(String requestKey,Bundle result) {
-        String dataString = result.getString("LocationData");
-        String obu_id;
-        double latitude,longitude,speed;
-        try {
-            JSONObject data = new JSONObject(dataString);
-            obu_id = data.getString("device_id");
-            latitude = data.getDouble("lat");
-            longitude = data.getDouble("lon");
-            speed = data.getDouble("spd");
-            boolean latLonValid = data.getBoolean("pos_valid");
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+        String obu_id = result.getString("obu_id");
+
         View rootView = requireView();
 
         TextView obuIdValue = rootView.findViewById(R.id.obuIdValue);
@@ -88,22 +78,23 @@ public class CarInfoFragment extends Fragment {
             Log.w("doHandleNcsLocation", "车辆ID与本车不匹配");
             return;
         }
+        Car carSelfNow = CarManageService.getCarSelf();
 
         // 给速度曲线添加值
-        snakeView.addValue((float) speed);
+        snakeView.addValue(carSelfNow.getSpeed());
         // 更新速度文本
         TextView speedTextView = rootView.findViewById(R.id.speed);
         NumberFormat nf_speed = NumberFormat.getNumberInstance();
         nf_speed.setMaximumFractionDigits(2);
         nf_speed.setRoundingMode(RoundingMode.UP);
-        speedTextView.setText(nf_speed.format(speed));
+        speedTextView.setText(nf_speed.format(carSelfNow.getSpeed()));
 
         // 更新经纬度文本
         TextView coordinateTextView = rootView.findViewById(R.id.location_coordinate);
         NumberFormat nf = NumberFormat.getNumberInstance();
         nf.setMaximumFractionDigits(5);
         nf.setRoundingMode(RoundingMode.UP);
-        String coordinate = "( " + nf.format(longitude) + " , " + nf.format(latitude) + " )";
+        String coordinate = "( " + nf.format(carSelfNow.getLatLng().latitude) + " , " + nf.format(carSelfNow.getLatLng().longitude) + " )";
         coordinateTextView.setText(coordinate);
     }
 }

@@ -1,13 +1,17 @@
 package com.linmu.collision_warning_system.Entry;
 
+import android.util.Log;
+
 import com.baidu.mapapi.model.LatLng;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Car {
     private final String carId;
-
     LatLng latLng;
     private float speed;
     private float direction;

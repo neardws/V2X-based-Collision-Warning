@@ -3,8 +3,6 @@ package com.linmu.collision_warning_system.services;
 import android.os.Message;
 import android.util.Log;
 
-import androidx.fragment.app.FragmentManager;
-
 import com.linmu.collision_warning_system.utils.IpUtil;
 
 import org.json.JSONException;
@@ -20,7 +18,7 @@ public class NcsLocationService {
         return INSTANCE;
     }
 
-    private String unique;
+    private String unique = null;
     private CommunicationService communicationService;
 
     private NcsLocationService() {}

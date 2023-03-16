@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -30,8 +29,6 @@ import java.util.List;
 public class MainActivity extends FragmentActivity {
 
     private Context context;
-    // 碎片标签
-    private static final String sNormalFragmentTag = "map_fragment";
     private CommunicationService communicationService;
     private NcsLocationService ncsLocationService;
 
@@ -96,8 +93,6 @@ public class MainActivity extends FragmentActivity {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
                 super.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                Log.d("positionOffset", ""+positionOffset);
-                Log.d("position", ""+position);
             }
         });
         viewPager.setCurrentItem(1);
@@ -113,7 +108,7 @@ public class MainActivity extends FragmentActivity {
         baiduMapOptions.zoomControlsEnabled(false);
         // 动态创建地图碎片
         MapFragment mMapFragment = MapFragment.newInstance(baiduMapOptions);
-
+        final String sNormalFragmentTag = "map_fragment";
         mFragmentManager.beginTransaction()
                 .add(R.id.mapLayout
                         , mMapFragment

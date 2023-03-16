@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.R;
 import com.linmu.collision_warning_system.services.CarManageService;
 import com.linmu.collision_warning_system.services.CommunicationService;
@@ -115,10 +116,17 @@ public class CommunicationFragment extends Fragment {
         // 解析数据包
         int tag;
         JSONObject data;
+        String obuId;
+        double latitude,longitude,direction,speed;
         try {
             tag = resJsonObject.getInt("tag");
             if(tag == 2101) {
                 data = resJsonObject.getJSONObject("data");
+                obuId = data.getString("device_id");
+                latitude = data.getDouble("lat");
+                longitude = data.getDouble("lon");
+                direction = data.getDouble("hea");
+                speed = data.getDouble("spd");
             }
             else if (tag == 2102){
                 // TODO 多车位置处理
@@ -131,6 +139,8 @@ public class CommunicationFragment extends Fragment {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+        CarManageService.updateCarSelf(new LatLng(latitude,longitude), (float) speed, (float) direction);
+
         if(this.inputEditText == null) {
             return false;
         }
@@ -147,7 +157,10 @@ public class CommunicationFragment extends Fragment {
         ncsLocation.putString("LocationData",data.toString());
         FragmentManager fragmentManager = getParentFragmentManager();
         fragmentManager.setFragmentResult("MyNcsLocationForMap",ncsLocation);
-        fragmentManager.setFragmentResult("MyNcsLocationForCarInfo",ncsLocation);
+
+        Bundle ncsCarInfoUpdateSignal = new Bundle();
+        ncsCarInfoUpdateSignal.putString("obu_id",obuId);
+        fragmentManager.setFragmentResult("MyNcsLocationForCarInfo",ncsCarInfoUpdateSignal);
 
         return true;
     }
