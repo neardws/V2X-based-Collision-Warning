@@ -72,8 +72,6 @@ public class CommunicationService {
     private ThreadPoolExecutor mThreadPool;
 
     private CommunicationService() {}
-
-
     public void startReceive() {
         mThreadPool.execute(() -> {
             try {
@@ -84,14 +82,15 @@ public class CommunicationService {
         });
     }
 
-    public void sentAndReceive(JSONObject jsonObject){
+    public void sentAndReceive(JSONObject jsonObject,long waitTime){
         mThreadPool.execute(() -> {
             try {
+                Thread.sleep(waitTime);
                 // 发送消息
                 sender.send(singlePort,jsonObject);
                 // 接收消息
                 receiver.receiveOnce(singlePort);
-            } catch (IOException | RemoteException e) {
+            } catch (IOException | RemoteException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -118,7 +117,7 @@ public class CommunicationService {
                 return handleRes;
             }
             case 2222: {
-                handleRes = doHandleLocationMessage(msg);
+                handleRes = this.doHandleLocationMessage(msg);
                 return handleRes;
             }
         }
@@ -131,7 +130,6 @@ public class CommunicationService {
             Log.w("doHandleReceiveMessage", "本车还没有完成初始化! 拒绝处理接收消息!");
             return false;
         }
-        Log.i("handleMessage", String.format("doHandleReceiverMessage: %s",resJsonObject.toString()));
 
         // 解析数据包
         int tag;
@@ -159,6 +157,7 @@ public class CommunicationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+        Log.i("handleMessage", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, data));
 
         // 更新车辆信息
         CarManageService.updateCarSelf(new LatLng(latitude,longitude), (float) speed, (float) direction);

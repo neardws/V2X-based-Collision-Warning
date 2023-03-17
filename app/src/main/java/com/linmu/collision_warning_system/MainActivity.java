@@ -31,10 +31,7 @@ public class MainActivity extends FragmentActivity {
     private Context context;
     private CommunicationService communicationService;
     private NcsLocationService ncsLocationService;
-
     private FragmentManager fragmentManager;
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,7 +53,6 @@ public class MainActivity extends FragmentActivity {
         communicationService = CommunicationService.getInstance();
 
         // 初始化 NCS 定位服务
-        NcsLocationService.setCommunicationService(communicationService);
         ncsLocationService = NcsLocationService.getInstance();
 
         // TODO 添加循环尝试登录

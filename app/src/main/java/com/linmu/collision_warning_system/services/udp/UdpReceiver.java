@@ -62,7 +62,7 @@ public class UdpReceiver {
             throw new RuntimeException(e);
         }
 
-        Log.i("MyLogTag", String.format("ReceiveThread: \n jsonObject: %s",jsonObject));
+//        Log.i("MyLogTag", String.format("ReceiveThread: \n jsonObject: %s",jsonObject));
 
         return jsonObject;
     }

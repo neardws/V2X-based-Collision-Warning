@@ -11,21 +11,17 @@ import org.json.JSONObject;
 public class NcsLocationService {
 
     private static final NcsLocationService INSTANCE = new NcsLocationService();
-    public static void setCommunicationService(CommunicationService communicationService) {
-        INSTANCE.communicationService = communicationService;
-    }
     public static NcsLocationService getInstance() {
         return INSTANCE;
     }
-
     private String unique = null;
-    private CommunicationService communicationService;
-
-    private NcsLocationService() {}
-
+    private int tryCheckNcsTimes, tryLoginNcsTimes;
+    private NcsLocationService() {
+        tryCheckNcsTimes = 0;
+        tryLoginNcsTimes = 0;
+    }
     public boolean doHandleReceiveOnceMessage(Message msg) {
         JSONObject res = (JSONObject) msg.obj;
-
         int tag;
         try {
             tag = (int) res.get("tag");
@@ -56,10 +52,17 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        communicationService.sentAndReceive(askNcsState);
+        if(tryCheckNcsTimes > 5) {
+            Log.e("MyLogTag", "checkNcsState: 已尝试连接NCS 5次失败! 请检查网络连接情况!");
+            return;
+        }
+        // 计算等待时间, 每失败一次多等待0.5s;
+        long waitTime = tryCheckNcsTimes * 500L;
+        CommunicationService.getInstance().sentAndReceive(askNcsState,waitTime);
     }
 
     public void loginNcs() {
+        Log.w("MyLogTag", "loginNcs: 开始尝试登录!");
         JSONObject loginNcs;
         try {
             loginNcs = new JSONObject();
@@ -72,8 +75,15 @@ public class NcsLocationService {
             logoutNcs();
             throw new RuntimeException(e);
         }
-        communicationService.sentAndReceive(loginNcs);
+        if(tryLoginNcsTimes > 5) {
+            Log.e("MyLogTag", "checkNcsState: 已尝试登录NCS 5次失败! 请检查情况!");
+            return;
+        }
+        // 计算等待时间, 每失败一次多等待0.5s;
+        long waitTime = tryCheckNcsTimes * 500L;
+        CommunicationService.getInstance().sentAndReceive(loginNcs,waitTime);
     }
+
     private void doHandleStateCheckRes(JSONObject res) {
         String obuId;
         try {
@@ -87,6 +97,12 @@ public class NcsLocationService {
         Log.w("checkNcsState", String.format("广播寻址成功! %s OBU_id: %s",wordRsp,obuId));
         Log.w("checkNcsState", String.format("json: %s",res));
 
+        // 若车辆初始化失败则重新进行初始化
+        if(!initCarSelfRes) {
+            tryCheckNcsTimes += 1;
+            checkNcsState();
+            return;
+        }
         // 进行NCS登录
         this.loginNcs();
     }
@@ -99,9 +115,18 @@ public class NcsLocationService {
             throw new RuntimeException(e);
         }
         String wordRsp = rsp == 0 ? "成功" : "失败";
-        Log.w("NCS_login", String.format("startReceive:  登录: %s unique: %s",wordRsp,unique));
+        Log.w("MyLogTag", String.format("doHandleLoginRes: \n 登录: %s ", wordRsp));
+        if(rsp != 0) {
+            if(unique == null) {
+                Log.w("MyLogTag", "doHandleLoginRes: 登录失败, 即将重新尝试登录。");
+                tryLoginNcsTimes += 1;
+                this.loginNcs();
+                return;
+            }
+            Log.w("MyLogTag", String.format("doHandleLoginRes: 在请求之前，已完成注册登录 unique: %s",unique));
+        }
         // 通信服务开始接受消息
-        communicationService.startReceive();
+        CommunicationService.getInstance().startReceive();
     }
 
     public void logoutNcs() {
@@ -113,6 +138,6 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        communicationService.sentMessage(50501,logoutNcs);
+        CommunicationService.getInstance().sentMessage(50502,logoutNcs);
     }
 }

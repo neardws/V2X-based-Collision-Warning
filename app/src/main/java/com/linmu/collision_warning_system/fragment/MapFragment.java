@@ -143,7 +143,6 @@ public class MapFragment extends Fragment {
                 .coord(latLng);
         latLng = coordinateConverter.convert();
 
-        CarManageService.getCarSelf().addLatLatLngToDeque(latLng);
         MyLocationData locationData = new MyLocationData.Builder()
                 .direction((float) direction)
                 .latitude(latLng.latitude)
