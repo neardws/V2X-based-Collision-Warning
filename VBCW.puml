@@ -1,0 +1,215 @@
+@startuml
+class com.linmu.collision_warning_system.fragment.MyFragmentAdapter {
+~ List<Fragment> list
++ Fragment createFragment(int)
++ int getItemCount()
+}
+class com.linmu.collision_warning_system.fragment.OfflineMapFragment {
+- MKOfflineMap mOffline
+- TextView cidView
+- TextView stateView
+- EditText cityNameView
+- ArrayList<MKOLUpdateElement> localMapList
+- LocalMapAdapter lAdapter
+- LinearLayout mCityList
+- LinearLayout mLocalMap
++ {static} OfflineMapFragment newInstance()
++ void onCreate(Bundle)
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onViewCreated(View,Bundle)
++ void onPause()
++ void onDestroy()
+- void initView()
++ void clickCityListButton(View)
++ void clickLocalMapListButton(View)
++ void searchOfflineMap(View)
++ void startDownload(View)
++ void stopDownload(View)
++ void removeOfflineMap(View)
++ void updateView()
++ String formatDataSize(long)
++ void onGetOfflineMapState(int,int)
+}
+class com.linmu.collision_warning_system.fragment.OfflineMapFragment.LocalMapAdapter {
++ int getCount()
++ Object getItem(int)
++ long getItemId(int)
++ View getView(int,View,ViewGroup)
+}
+class com.linmu.collision_warning_system.fragment.OfflineMapFragment.LocalMapAdapter.ViewHolder {
+- Button display
+- Button remove
+- TextView title
+- TextView update
+- TextView ratio
++ Button getDisplay()
++ void setDisplay(Button)
++ Button getRemove()
++ void setRemove(Button)
++ TextView getTitle()
++ void setTitle(TextView)
++ TextView getUpdate()
++ void setUpdate(TextView)
++ TextView getRatio()
++ void setRatio(TextView)
+}
+class com.linmu.collision_warning_system.services.udp.UdpReceiver {
+- int port
+- int BUFF_SIZE
+- boolean stop
+- Messenger mServer
++ void setHandler(Handler)
+- JSONObject receive(DatagramSocket)
++ void receiveOnce(int)
++ void startReceive()
++ void stopReceive()
+}
+class com.linmu.collision_warning_system.services.NcsLocationService {
+- {static} NcsLocationService INSTANCE
+- String unique
++ {static} NcsLocationService getInstance()
++ boolean doHandleReceiveOnceMessage(Message)
++ void checkNcsState()
++ void loginNcs()
+- void doHandleStateCheckRes(JSONObject)
+- void doHandleLoginRes(JSONObject)
++ void logoutNcs()
+}
+class com.linmu.collision_warning_system.fragment.CarInfoFragment {
+- SnakeView snakeView
++ {static} CarInfoFragment newInstance()
++ void onCreate(Bundle)
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onViewCreated(View,Bundle)
+- void doHandleNcsLocation(String,Bundle)
+}
+class com.linmu.collision_warning_system.fragment.MapFragment {
+- MapView mapView
+- BaiduMap mBaiduMap
+- BaiduMapOptions baiduMapOptions
+- Polyline mPolyline
+- BitmapDescriptor mBitmapCar
+- BitmapDescriptor mGreenTexture
+- boolean firstLocation
++ {static} MapFragment newInstance(BaiduMapOptions)
++ void onCreate(Bundle)
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onViewCreated(View,Bundle)
++ void onResume()
++ void onPause()
++ void onDestroyView()
++ void onDestroy()
+- void doHandleNcsLocation(String,Bundle)
+- void initPolyLine()
+- void drawUpdatePolyLine()
+}
+class com.linmu.collision_warning_system.services.udp.UdpSender {
+- InetAddress targetIp
+- int targetPort
++ void send(int,JSONObject)
+}
+class com.linmu.collision_warning_system.Entry.Car {
+- String carId
+~ LatLng latLng
+- float speed
+- float direction
+- ConcurrentLinkedDeque<LatLng> latLngDeque
++ String getCarId()
++ LatLng getLatLng()
++ void setLatLng(LatLng)
++ float getSpeed()
++ void setSpeed(float)
++ float getDirection()
++ void setDirection(float)
++ ConcurrentLinkedDeque<LatLng> getLatLngDeque()
++ void addLatLatLngToDeque(LatLng)
++ boolean equals(Object)
++ int hashCode()
+}
+class com.linmu.collision_warning_system.MainActivity {
+- Context context
+- CommunicationService communicationService
+- NcsLocationService ncsLocationService
+- FragmentManager fragmentManager
+- String[] permissions
+- {static} int OPEN_SET_REQUEST_CODE
+# void onCreate(Bundle)
+# void onResume()
+# void onPause()
+# void onDestroy()
+- void initPager()
+- void initMapFragment()
+- void initPermissions()
++ boolean lacksPermission(String[])
++ void onRequestPermissionsResult(int,String[],int[])
+}
+class com.linmu.collision_warning_system.Application {
++ Vibrator mVibrator
++ void onCreate()
+}
+class com.linmu.collision_warning_system.services.CommunicationService {
+- {static} CommunicationService INSTANCE
+- FragmentManager fragmentManager
+- int singlePort
+- UdpReceiver receiver
+- UdpSender sender
+- ThreadPoolExecutor mThreadPool
++ {static} CommunicationService getInstance()
++ {static} void initConfig(Context,FragmentManager)
++ void startReceive()
++ void sentAndReceive(JSONObject)
++ void sentMessage(int,JSONObject)
++ void stopCommunication()
+- boolean doHandleReceiveMessage(Message)
+- boolean doHandleLocationMessage(Message)
+# void finalize()
+}
+class com.linmu.collision_warning_system.utils.IpUtil {
++ {static} String getIpAddress()
+}
+class com.linmu.collision_warning_system.services.BaiduLocationService {
+- LocationClient mLocationClient
+- boolean firstLocation
++ void startLocation()
+- void initLocationOption()
++ void stopLocation()
+}
+class com.linmu.collision_warning_system.services.BaiduLocationService.LocationListener {
++ void onReceiveLocation(BDLocation)
+}
+class com.linmu.collision_warning_system.utils.PropertiesUtil {
++ {static} Properties getProperties(Context,String)
+}
+class com.linmu.collision_warning_system.fragment.CommunicationFragment {
+- EditText inputEditText
+- CommunicationService communicationService
++ {static} CommunicationFragment newInstance()
++ void onCreate(Bundle)
++ View onCreateView(LayoutInflater,ViewGroup,Bundle)
++ void onViewCreated(View,Bundle)
+- void doOnSendButtonClick(View)
+- void doHandleNcsLog(String,Bundle)
++ void initCommunication()
+}
+class com.linmu.collision_warning_system.services.CarManageService {
+- {static} Car carSelf
++ {static} boolean initCarSelf(String)
++ {static} Car getCarSelf()
++ {static} void updateCarSelf(LatLng,float,float)
+}
+
+
+androidx.viewpager2.adapter.FragmentStateAdapter <|-- com.linmu.collision_warning_system.fragment.MyFragmentAdapter
+com.baidu.mapapi.map.offline.MKOfflineMapListener <|.. com.linmu.collision_warning_system.fragment.OfflineMapFragment
+androidx.fragment.app.Fragment <|-- com.linmu.collision_warning_system.fragment.OfflineMapFragment
+com.linmu.collision_warning_system.fragment.OfflineMapFragment +.. com.linmu.collision_warning_system.fragment.OfflineMapFragment.LocalMapAdapter
+com.linmu.collision_warning_system.fragment.BaseAdapter <|-- com.linmu.collision_warning_system.fragment.OfflineMapFragment.LocalMapAdapter
+com.linmu.collision_warning_system.fragment.OfflineMapFragment.LocalMapAdapter +.. com.linmu.collision_warning_system.fragment.OfflineMapFragment.LocalMapAdapter.ViewHolder
+androidx.fragment.app.Fragment <|-- com.linmu.collision_warning_system.fragment.CarInfoFragment
+androidx.fragment.app.Fragment <|-- com.linmu.collision_warning_system.fragment.MapFragment
+androidx.fragment.app.FragmentActivity <|-- com.linmu.collision_warning_system.MainActivity
+com.linmu.collision_warning_system.Application <|-- com.linmu.collision_warning_system.Application
+com.linmu.collision_warning_system.services.BaiduLocationService +.. com.linmu.collision_warning_system.services.BaiduLocationService.LocationListener
+com.linmu.collision_warning_system.services.BDAbstractLocationListener <|-- com.linmu.collision_warning_system.services.BaiduLocationService.LocationListener
+androidx.fragment.app.Fragment <|-- com.linmu.collision_warning_system.fragment.CommunicationFragment
+@enduml
