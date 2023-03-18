@@ -72,8 +72,9 @@ public class CommunicationFragment extends Fragment {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+        // TODO 随机端口会导致接收不到
         // port选择为-1表示随机端口
-        communicationService.sentMessage(-1,jsonObject);
+        communicationService.sendMessage(-1,jsonObject);
     }
 
     private void doHandleNcsLog(String requestKey,Bundle result) {

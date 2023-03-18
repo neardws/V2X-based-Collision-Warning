@@ -16,6 +16,7 @@ public class NcsLocationService {
     }
     private String unique = null;
     private int tryCheckNcsTimes, tryLoginNcsTimes;
+    private CommunicationService communicationService;
     private NcsLocationService() {
         tryCheckNcsTimes = 0;
         tryLoginNcsTimes = 0;
@@ -52,20 +53,22 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+        if(tryCheckNcsTimes == 0) {
+            communicationService = CommunicationService.getInstance();
+        }
         if(tryCheckNcsTimes > 5) {
             Log.e("MyLogTag", "checkNcsState: 已尝试连接NCS 5次失败! 请检查网络连接情况!");
             return;
         }
         // 计算等待时间, 每失败一次多等待0.5s;
         long waitTime = tryCheckNcsTimes * 500L;
-        CommunicationService.getInstance().sentAndReceive(askNcsState,waitTime);
+        communicationService.sentAndReceive(askNcsState,waitTime);
     }
 
     public void loginNcs() {
         Log.w("MyLogTag", "loginNcs: 开始尝试登录!");
-        JSONObject loginNcs;
+        JSONObject loginNcs = new JSONObject();
         try {
-            loginNcs = new JSONObject();
             loginNcs.put("tag",2001);
             JSONObject loginNcs_data = new JSONObject();
             loginNcs_data.put("ip", IpUtil.getIpAddress());
@@ -81,7 +84,18 @@ public class NcsLocationService {
         }
         // 计算等待时间, 每失败一次多等待0.5s;
         long waitTime = tryCheckNcsTimes * 500L;
-        CommunicationService.getInstance().sentAndReceive(loginNcs,waitTime);
+        communicationService.sentAndReceive(loginNcs,waitTime);
+    }
+
+    public void keepActivateNcs() {
+        JSONObject activateNcs = new JSONObject();
+        try {
+            activateNcs.put("tag",2006);
+            activateNcs.put("unique", unique);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        communicationService.sendMessageConstantly(activateNcs);
     }
 
     private void doHandleStateCheckRes(JSONObject res) {
@@ -126,7 +140,8 @@ public class NcsLocationService {
             Log.w("MyLogTag", String.format("doHandleLoginRes: 在请求之前，已完成注册登录 unique: %s",unique));
         }
         // 通信服务开始接受消息
-        CommunicationService.getInstance().startReceive();
+        communicationService.startReceive();
+        this.keepActivateNcs();
     }
 
     public void logoutNcs() {
@@ -138,6 +153,6 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        CommunicationService.getInstance().sentMessage(50502,logoutNcs);
+        communicationService.sendMessage(50502,logoutNcs);
     }
 }
