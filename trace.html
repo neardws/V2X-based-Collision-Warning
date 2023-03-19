@@ -20,26 +20,37 @@
     map.enableScrollWheelZoom(); // 开启鼠标滚轮缩放
     map.addControl(new BMap.ScaleControl()); // 添加比例尺控件
 
-
-   
+    var car1_lonList=[];
+    var car1_latList=[];
+    var car1_tracelist = []; 
+    var car2_lonList=[];
+    var car2_latList=[];
+    var car2_tracelist = []; 
 
     function add_car_one_marker(lon,lat,id)
     {
-      //alert(id+" "+typeof(id));
+      car1_lonList.push(lon);
+      car1_latList.push(lat);
+     
       clear_car_overlay(id);
       var point = new BMap.Point(lon,lat);
+      car1_tracelist.push(point);
       var carOneIcon = new BMap.Icon("D:/resource/car_1.png", new BMap.Size(20, 29),{anchor:new BMap.Size(16, 32) });
 		  var marker = new BMap.Marker(point,{icon:carOneIcon});
       marker.customData={carid:'1'}
       //alert("添加车辆1marker") 
 		  map.addOverlay(marker);  
+      
     }
 
     function add_car_two_marker(lon,lat,id)
     {
+      car2_lonList.push(lon);
+      car2_latList.push(lat);
      // alert(id+" "+typeof(id));
       clear_car_overlay(id);
       var point = new BMap.Point(lon,lat);
+      car2_tracelist.push(point);
       var carTwoIcon = new BMap.Icon("D:/resource/car_2.png", new BMap.Size(20, 28),{anchor:new BMap.Size(16, 32) });
 		  var marker = new BMap.Marker(point,{icon:carTwoIcon});
       marker.customData={carid:'2'}
@@ -93,6 +104,70 @@
           }
       })
     }
+
+    function add_car_one_trace()
+    {
+      var polyline =new BMap.Polyline(car1_tracelist, {
+      enableEditing: false,//是否启用线编辑，默认为false
+      enableClicking: false,//是否响应点击事件，默认为true
+      strokeWeight:'4',//折线的宽度，以像素为单位
+      strokeOpacity: 0.8,//折线的透明度，取值范围0 - 1
+      strokeColor:"blue" //折线颜色
+      });
+      map.addOverlay(polyline);          //增加折线
+      //map.centerAndZoom(tracelist[num_list.length-1], 15);
+
+      //var carOneIcon = new BMap.Icon("D:/resource/car_1.png", new BMap.Size(20, 29),{anchor:new BMap.Size(16, 32) });
+		  //var marker = new BMap.Marker(point,{icon:carOneIcon});
+      // //首尾加上标注点
+      // var marker = new BMap.Marker(tracelist[0],{icon:carOneIcon}); // 创建点
+      // map.addOverlay(marker);                 // 加载标注
+      // var marker = new BMap.Marker(tracelist[tracelist.length-1],{icon:carOneIcon}); // 创建点
+      // map.addOverlay(marker);                 // 加载标注
+
+    }
+
+    function add_car_two_trace()
+    {
+      var polyline =new BMap.Polyline(car2_tracelist, {
+      enableEditing: false,//是否启用线编辑，默认为false
+      enableClicking: false,//是否响应点击事件，默认为true
+      strokeWeight:'4',//折线的宽度，以像素为单位
+      strokeOpacity: 0.8,//折线的透明度，取值范围0 - 1
+      strokeColor:"orange" //折线颜色
+      });
+      map.addOverlay(polyline);          //增加折线
+      //map.centerAndZoom(tracelist[num_list.length-1], 15);
+
+      //var carOneIcon = new BMap.Icon("D:/resource/car_1.png", new BMap.Size(20, 29),{anchor:new BMap.Size(16, 32) });
+		  //var marker = new BMap.Marker(point,{icon:carOneIcon});
+      // //首尾加上标注点
+      // var marker = new BMap.Marker(tracelist[0],{icon:carOneIcon}); // 创建点
+      // map.addOverlay(marker);                 // 加载标注
+      // var marker = new BMap.Marker(tracelist[tracelist.length-1],{icon:carOneIcon}); // 创建点
+      // map.addOverlay(marker);                 // 加载标注
+
+    }
+
+    function remove_trace()
+    {
+      // 1.获取图层中所有的覆盖物
+      let all=this.map.getOverlays()
+      /**
+      * item.toString() 调用toString() 方法后可以获取覆盖物的类型
+      *   Marker、Polyline、Polygon、Circle等
+      */
+      all.map(item=>{
+        alert(item.toString())
+          if (item.toString() == "Polyline") {
+            alert("start deleting")
+              this.map.removeOverlay(item);
+          }
+         // console.log('item',item.toString())
+      })
+
+    }
+
 
     function send(){
             map.clearOverlays();

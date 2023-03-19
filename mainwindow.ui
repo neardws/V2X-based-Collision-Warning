@@ -489,6 +489,32 @@
      <string>【日志框】</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="btn_trace">
+    <property name="geometry">
+     <rect>
+      <x>1260</x>
+      <y>380</y>
+      <width>80</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>查看轨迹</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_clear">
+    <property name="geometry">
+     <rect>
+      <x>1360</x>
+      <y>380</y>
+      <width>80</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>清除轨迹</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -496,7 +522,7 @@
      <x>0</x>
      <y>0</y>
      <width>1511</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

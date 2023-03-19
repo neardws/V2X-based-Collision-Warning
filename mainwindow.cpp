@@ -46,6 +46,10 @@ MainWindow::MainWindow(QWidget *parent) :
    // mUDPSocket = new QUdpSocket(this);
     myudp=new MyUDP;
 
+    connect(ui->btn_trace,SIGNAL(clicked()),this,SLOT(on_btnTrace_clicked()));
+    connect(ui->btn_clear,SIGNAL(clicked()),this,SLOT(on_btnClear_clicked()));
+
+
 
 }
 
@@ -99,6 +103,8 @@ void MainWindow::onUdpAppendMessage(const QString &from, const QJsonObject &mess
     QString simpjson_str(message_array);
 
 
+
+
         //解析json格式的各项数据信息
         QString         id               = message.find("device_id").value().toString();
         double   timeStamp        = message.find("current_time").value().toDouble();
@@ -116,84 +122,94 @@ void MainWindow::onUdpAppendMessage(const QString &from, const QJsonObject &mess
         if(id=="1")
         {
 
+            //展示信息
             ui->lineEdit_car1_id->setText(id);
             ui->lineEdit_car1_lon->setText(QString::number(lon,10,6));
             ui->lineEdit_car1_lat->setText(QString::number(lat,10,6));
             ui->lineEdit_car1_vel->setText(QString::number(speed,10,6));
             ui->lineEdit_car1_hea->setText(QString::number(direction,10,6));
             ui->lineEdit_car1_timestamp->setText(QString::number(timeStamp));
+
+            //绘制车辆1轨迹
+
+            //第一次全局清除
+           if(initial)
+           {
+               //   清除上一次的点
+               QString str = "send()";
+               m_pWebView->page()->runJavaScript(str);
+
+               //把要调用的JS命令当做QString传递给网页
+               QString cmd = QString("add_car_one_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
+               qDebug() << cmd;
+               //实现QT通过C++调用JS函数
+               m_pWebView->page()->runJavaScript(cmd);
+               initial=0;
+           }
+           else
+           {
+               //把要调用的JS命令当做QString传递给网页
+               QString cmd = QString("add_car_one_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
+               qDebug() << cmd;
+               //实现QT通过C++调用JS函数
+               m_pWebView->page()->runJavaScript(cmd);
+
+           }
         }
         //展示车辆2的信息
         else if(id=="2")
         {
-
+            //展示信息
             ui->lineEdit_car2_id->setText(id);
             ui->lineEdit_car2_lon->setText(QString::number(lon,10,6));
             ui->lineEdit_car2_lat->setText(QString::number(lat,10,6));
             ui->lineEdit_car2_vel->setText(QString::number(speed,10,6));
             ui->lineEdit_car2_hea->setText(QString::number(direction,10,6));
             ui->lineEdit_car2_timestamp->setText(QString::number(timeStamp));
+
+            //绘制车辆2轨迹
+            //第一次全局清除
+            if(initial)
+            {
+                //   清除上一次的点
+                QString str = "send()";
+                m_pWebView->page()->runJavaScript(str);
+
+                //把要调用的JS命令当做QString传递给网页
+                QString cmd = QString("add_car_two_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
+                qDebug() << cmd;
+                //实现QT通过C++调用JS函数
+                m_pWebView->page()->runJavaScript(cmd);
+                initial=0;
+            }
+            else
+            {
+                //把要调用的JS命令当做QString传递给网页
+                QString cmd = QString("add_car_two_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
+                qDebug() << cmd;
+                //实现QT通过C++调用JS函数
+                m_pWebView->page()->runJavaScript(cmd);
+
+            }
         }
 
-        //给车辆1在地图上标点
-       if(id=="1")
-       {
-            //第一次全局清除
 
 
-           if(initial)
-           {
-               //   清除上一次的点
-               QString str = "send()";
-               m_pWebView->page()->runJavaScript(str);
+       emit newMessage(message);
+}
 
-               //把要调用的JS命令当做QString传递给网页
-               QString cmd = QString("add_car_one_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
-               qDebug() << cmd;
-               //实现QT通过C++调用JS函数
-               m_pWebView->page()->runJavaScript(cmd);
-               initial=0;
-           }
-           else
-           {
-               //把要调用的JS命令当做QString传递给网页
-               QString cmd = QString("add_car_one_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
-               qDebug() << cmd;
-               //实现QT通过C++调用JS函数
-               m_pWebView->page()->runJavaScript(cmd);
-           }
+void MainWindow::on_btnTrace_clicked()
+{
+    QString cmd = QString("add_car_one_trace();add_car_two_trace();");
+     qDebug() << cmd;
+     m_pWebView->page()->runJavaScript(cmd);//传给javascript
+}
 
-       }
-       //给车辆2在地图上标点
-       else if(id=="2")
-       {
-           //第一次全局清除
-           if(initial)
-           {
-               //   清除上一次的点
-               QString str = "send()";
-               m_pWebView->page()->runJavaScript(str);
-
-               //把要调用的JS命令当做QString传递给网页
-               QString cmd = QString("add_car_two_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
-               qDebug() << cmd;
-               //实现QT通过C++调用JS函数
-               m_pWebView->page()->runJavaScript(cmd);
-               initial=0;
-           }
-           else
-           {
-               //把要调用的JS命令当做QString传递给网页
-               QString cmd = QString("add_car_two_marker(%0,%1,%2)").arg(QString::number(lon,'f', 6)).arg(QString::number(lat,'f', 6)).arg(id);
-               qDebug() << cmd;
-               //实现QT通过C++调用JS函数
-               m_pWebView->page()->runJavaScript(cmd);
-
-           }
-
-       }
-
-        emit newMessage(message);
+void MainWindow::on_btnClear_clicked()
+{
+    QString cmd = QString("remove_trace()");
+     qDebug() << cmd;
+     m_pWebView->page()->runJavaScript(cmd);//传给javascript
 }
 
 
