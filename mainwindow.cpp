@@ -48,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->btn_trace,SIGNAL(clicked()),this,SLOT(on_btnTrace_clicked()));
     connect(ui->btn_clear,SIGNAL(clicked()),this,SLOT(on_btnClear_clicked()));
+    connect(ui->pushButton_cancel,SIGNAL(clicked()),this,SLOT(on_pushButtonCancel_clicked()));
 
 
 
@@ -81,8 +82,11 @@ void MainWindow::on_pushButton_clicked()
     //mUDPSocket = new QUdpSocket(this);
     //udp
     //绑定
-    udpListenPort = ui->lineEdit_Port->text().toInt();
-    localAddr.setAddress(ui->lineEdit_IP->text());
+    //udpListenPort = ui->lineEdit_Port->text().toInt();
+    udpListenPort=9000;
+   // localAddr.setAddress(ui->lineEdit_IP->text());
+    //设置ip地址
+    localAddr.setAddress("127.0.0.1");
     qDebug()<<localAddr<<"+"<<udpListenPort;
     myudp->bindPort(localAddr,udpListenPort);
     connect(myudp, SIGNAL(newMessage(QString, QJsonObject)), this, SLOT(onUdpAppendMessage(QString, QJsonObject)));
@@ -91,7 +95,15 @@ void MainWindow::on_pushButton_clicked()
     //qDebug() << mServerPort;
    // connect(mUDPSocket, &QUdpSocket::readyRead, this, &MainWindow::slotDealMsg,Qt::UniqueConnection);
 //    mAllCarInfo.push_back(carinfo);
-ui->pushButton->setEnabled(false);
+    ui->pushButton->setEnabled(false);
+    ui->pushButton_cancel->setEnabled(true);
+}
+
+void MainWindow::on_pushButtonCancel_clicked()
+{
+    myudp->unbindPort();
+    ui->pushButton_cancel->setEnabled(false);
+    ui->pushButton->setEnabled(true);
 }
 
 void MainWindow::onUdpAppendMessage(const QString &from, const QJsonObject &message){

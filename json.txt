@@ -1,8 +1,9 @@
 {
-		"device_id": 1,
+		"device_id": "1",
 		"lon": 106.812512,
 		"lat": 29.746058,
 		"spd": 12.5,
 		"hea": 1.5,
 		"current_time":1211122222
 }
+

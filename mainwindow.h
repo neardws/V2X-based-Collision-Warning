@@ -57,6 +57,7 @@ private slots:
      *
      ******************************/
     void on_pushButton_clicked();
+    void on_pushButtonCancel_clicked();
     //void onUdpStopButtonClicked();
     //void onUdpSendMessage();
     //void onSendMessage(const QJsonObject &result);
