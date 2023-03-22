@@ -3,6 +3,8 @@ package com.linmu.collision_warning_system.services;
 import android.os.Message;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.linmu.collision_warning_system.utils.IpUtil;
 
 import org.json.JSONException;
@@ -21,7 +23,7 @@ public class NcsLocationService {
         tryCheckNcsTimes = 0;
         tryLoginNcsTimes = 0;
     }
-    public boolean doHandleReceiveOnceMessage(Message msg) {
+    public boolean doHandleReceiveOnceMessage(@NonNull Message msg) {
         JSONObject res = (JSONObject) msg.obj;
         int tag;
         try {
@@ -98,7 +100,7 @@ public class NcsLocationService {
         communicationService.sendMessageConstantly(activateNcs);
     }
 
-    private void doHandleStateCheckRes(JSONObject res) {
+    private void doHandleStateCheckRes(@NonNull JSONObject res) {
         String obuId;
         try {
             JSONObject data = res.getJSONObject("data");
@@ -120,7 +122,7 @@ public class NcsLocationService {
         // 进行NCS登录
         this.loginNcs();
     }
-    private void doHandleLoginRes(JSONObject res) {
+    private void doHandleLoginRes(@NonNull JSONObject res) {
         int rsp;
         try {
             rsp = (int) res.get("rsp");

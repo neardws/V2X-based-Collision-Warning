@@ -9,11 +9,13 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
 
 import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.services.udp.UdpReceiver;
 import com.linmu.collision_warning_system.services.udp.UdpSender;
+import com.linmu.collision_warning_system.utils.IpUtil;
 import com.linmu.collision_warning_system.utils.PropertiesUtil;
 
 import org.json.JSONException;
@@ -79,6 +81,7 @@ public class CommunicationService {
 
     private CommunicationService() {}
     public void startReceive() {
+        if(checkNetNotAvailable()) return;
         mThreadPool.execute(() -> {
             try {
                 receiver.startReceive();
@@ -88,6 +91,7 @@ public class CommunicationService {
         });
     }
     public void sentAndReceive(JSONObject jsonObject,long waitTime){
+        if(checkNetNotAvailable()) return;
         mThreadPool.execute(() -> {
             try {
                 Thread.sleep(waitTime);
@@ -101,6 +105,7 @@ public class CommunicationService {
         });
     }
     public void sendMessage(int port, JSONObject jsonObject) {
+        if(checkNetNotAvailable()) return;
         mThreadPool.execute(() -> {
             try {
                 sender.send(port,jsonObject);
@@ -110,6 +115,7 @@ public class CommunicationService {
         });
     }
     public void sendMessageConstantly(JSONObject jsonObject) {
+        if(checkNetNotAvailable()) return;
         activateFlag = true;
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -134,7 +140,7 @@ public class CommunicationService {
         receiver.stopReceive();
     }
 
-    private boolean doHandleReceiveMessage(Message msg) {
+    private boolean doHandleReceiveMessage(@NonNull Message msg) {
         boolean handleRes;
         switch (msg.what) {
             case 1111: {
@@ -149,7 +155,7 @@ public class CommunicationService {
         return false;
     }
 
-    private boolean doHandleLocationMessage(Message msg) {
+    private boolean doHandleLocationMessage(@NonNull Message msg) {
         JSONObject resJsonObject = (JSONObject) msg.obj;
         if(CarManageService.getCarSelf() == null) {
             Log.w("doHandleReceiveMessage", "本车还没有完成初始化! 拒绝处理接收消息!");
@@ -197,6 +203,13 @@ public class CommunicationService {
         fragmentManager.setFragmentResult("NcsLocationForCarInfo",ncsCarInfoUpdateSignal);
 
         return true;
+    }
+    private boolean checkNetNotAvailable() {
+        if(IpUtil.getIpAddress() == null) {
+            Log.e("MyLogTag", "sentAndReceive: 没有连接到网络！");
+            return true;
+        }
+        return false;
     }
 
     @Override

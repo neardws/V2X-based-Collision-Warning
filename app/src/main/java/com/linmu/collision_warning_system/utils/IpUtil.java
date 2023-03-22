@@ -19,7 +19,7 @@ public class IpUtil {
                     InetAddress inetAddress = enumIpAddress.nextElement();
                     if (inetAddress instanceof Inet4Address && !inetAddress.isLoopbackAddress()) {
                         String hostIp = inetAddress.getHostAddress();
-                        Log.d("GetIp", "手机IP地址get the IpAddress--> " + hostIp);
+                        Log.d("MyLogTag", "IP地址get the IpAddress--> " + hostIp);
                         return hostIp;
                     }
                 }
@@ -27,7 +27,7 @@ public class IpUtil {
         } catch (SocketException e) {
             e.printStackTrace();
         }
-        Log.e("GetIp", "没有获取到IP地址");
+        Log.e("MyLogTag", "没有获取到IP地址");
         return null;
     }
 }

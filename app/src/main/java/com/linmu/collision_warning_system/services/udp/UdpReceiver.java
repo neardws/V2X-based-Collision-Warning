@@ -20,11 +20,8 @@ import java.net.InetAddress;
 public class UdpReceiver {
 
     private final int port;
-
     private final int BUFF_SIZE;
-
     private boolean stop;
-
     private Messenger mServer = null;
 
     public UdpReceiver(String receivePort, String buffSize) {
@@ -53,7 +50,6 @@ public class UdpReceiver {
 
         // 获取到数据
         String msg = new String(receivePacket.getData(),0,receivePacket.getLength());
-
         // 将数据解析为 JSONObject
         try {
             jsonObject = new JSONObject(msg);
@@ -61,9 +57,6 @@ public class UdpReceiver {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-
-//        Log.i("MyLogTag", String.format("ReceiveThread: \n jsonObject: %s",jsonObject));
-
         return jsonObject;
     }
 

@@ -55,7 +55,6 @@ public class MainActivity extends FragmentActivity {
         // 初始化 NCS 定位服务
         ncsLocationService = NcsLocationService.getInstance();
 
-        // TODO 添加循环尝试登录
         ncsLocationService.checkNcsState();
     }
 
@@ -122,14 +121,6 @@ public class MainActivity extends FragmentActivity {
      ***************************************************************************************
      */
 
-    //权限数组（申请定位）
-    private final String[] permissions = new String[]{
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-    };
     private static final int OPEN_SET_REQUEST_CODE = 100;
 
     /**
@@ -137,6 +128,14 @@ public class MainActivity extends FragmentActivity {
      * 检查是否拥有权限列表内的权限，若无则申请
      */
     private void initPermissions() {
+        //权限数组
+        final String[] permissions = new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_LOCATION_EXTRA_COMMANDS,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+        };
         if (lacksPermission(permissions)) {//判断是否拥有权限
             //请求权限，第二参数权限String数据，第三个参数是请求码便于在onRequestPermissionsResult 方法中根据code进行判断
             ActivityCompat.requestPermissions(this, permissions, OPEN_SET_REQUEST_CODE);

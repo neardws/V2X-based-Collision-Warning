@@ -132,8 +132,6 @@ public class MapFragment extends Fragment {
             firstLocation = false;
         }
         String obu_id = result.getString("obu_id");
-
-
         Car carSelf = CarManageService.getCarSelf();
         LatLng latLng = carSelf.getLatLng();
         double direction = carSelf.getDirection();
