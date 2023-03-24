@@ -1,28 +1,24 @@
 package com.linmu.collision_warning_system.Entry;
 
-import android.util.Log;
-
 import com.baidu.mapapi.model.LatLng;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class Car {
     private final String carId;
+    private int life;
     LatLng latLng;
     private float speed;
     private float direction;
-
     private final ConcurrentLinkedDeque<LatLng> latLngDeque;
 
-    public Car(String carId) {
+    public Car(String carId, LatLng latLng, float speed, float direction) {
         this.carId = carId;
-        this.speed = 0.0f;
-        this.latLng = new LatLng(29.738706d, 106.808177d); // 重庆卓越工程师学院
-        this.direction = 0.0f;
+        this.life = 100;
+        this.latLng = latLng;
+        this.speed = speed;
+        this.direction = direction;
         this.latLngDeque = new ConcurrentLinkedDeque<>();
         // 添加初始化数据
         this.latLngDeque.addFirst(this.latLng);
@@ -36,35 +32,35 @@ public class Car {
         return latLng;
     }
 
-    public void setLatLng(LatLng latLng) {
-        this.latLng = latLng;
-    }
-
     public float getSpeed() {
         return speed;
-    }
-
-    public void setSpeed(float speed) {
-        this.speed = speed;
     }
 
     public float getDirection() {
         return direction;
     }
-
-    public void setDirection(float direction) {
-        this.direction = direction;
+    public int getLife() {
+        return life;
+    }
+    public void keepLife() {
+        this.life = 10;
+    }
+    public void updateLife() {
+        this.life -= 1;
     }
 
     public ConcurrentLinkedDeque<LatLng> getLatLngDeque() {
         return latLngDeque;
     }
 
-    public void addLatLatLngToDeque(LatLng newLatLng) {
+    public void addCarInfo(LatLng latLng, float speed, float direction) {
+        this.latLng = latLng;
+        this.speed = speed;
+        this.direction = direction;
         if(this.latLngDeque.size() >= 10) {
             this.latLngDeque.pollLast();
         }
-        this.latLngDeque.addFirst(newLatLng);
+        this.latLngDeque.addFirst(latLng);
     }
 
     @Override

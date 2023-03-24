@@ -12,8 +12,11 @@ import org.json.JSONObject;
 
 public class NcsLocationService {
 
-    private static final NcsLocationService INSTANCE = new NcsLocationService();
+    private static NcsLocationService INSTANCE;
     public static NcsLocationService getInstance() {
+        if(INSTANCE == null) {
+            INSTANCE = new NcsLocationService();
+        }
         return INSTANCE;
     }
     private String unique = null;
@@ -108,17 +111,16 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        boolean initCarSelfRes = CarManageService.initCarSelf(obuId);
-        String wordRsp = initCarSelfRes ? "车辆初始化成功" : "车辆初始化失败";
-        Log.w("checkNcsState", String.format("广播寻址成功! %s OBU_id: %s",wordRsp,obuId));
+        boolean initCarSelfRes = CarManageService.setCarSelfId(obuId);
+        Log.w("checkNcsState", String.format("广播寻址成功! OBU_id: %s",obuId));
         Log.w("checkNcsState", String.format("json: %s",res));
 
         // 若车辆初始化失败则重新进行初始化
-        if(!initCarSelfRes) {
-            tryCheckNcsTimes += 1;
-            checkNcsState();
-            return;
-        }
+//        if(!initCarSelfRes) {
+//            tryCheckNcsTimes += 1;
+//            checkNcsState();
+//            return;
+//        }
         // 进行NCS登录
         this.loginNcs();
     }

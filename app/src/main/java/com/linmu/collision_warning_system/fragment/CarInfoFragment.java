@@ -16,9 +16,6 @@ import com.linmu.collision_warning_system.R;
 import com.linmu.collision_warning_system.services.CarManageService;
 import com.txusballesteros.SnakeView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 
@@ -67,34 +64,34 @@ public class CarInfoFragment extends Fragment {
     }
 
     private void doHandleNcsLocation(String requestKey,Bundle result) {
-        String obu_id = result.getString("obu_id");
+        int type = result.getInt("type");
+        if(type != 1) {
+            Log.e("MyLogTag", "doHandleNcsLocation: 类型错误");
+            return;
+        }
 
         View rootView = requireView();
 
         TextView obuIdValue = rootView.findViewById(R.id.obuIdValue);
         obuIdValue.setText(CarManageService.getCarSelf().getCarId());
 
-        if(!obu_id.equals(CarManageService.getCarSelf().getCarId())) {
-            Log.w("doHandleNcsLocation", "车辆ID与本车不匹配");
-            return;
-        }
-        Car carSelfNow = CarManageService.getCarSelf();
+        Car carSelf = CarManageService.getCarSelf();
 
         // 给速度曲线添加值
-        snakeView.addValue(carSelfNow.getSpeed());
+        snakeView.addValue(carSelf.getSpeed());
         // 更新速度文本
         TextView speedTextView = rootView.findViewById(R.id.speed);
         NumberFormat nf_speed = NumberFormat.getNumberInstance();
         nf_speed.setMaximumFractionDigits(2);
         nf_speed.setRoundingMode(RoundingMode.UP);
-        speedTextView.setText(nf_speed.format(carSelfNow.getSpeed()));
+        speedTextView.setText(nf_speed.format(carSelf.getSpeed()));
 
         // 更新经纬度文本
         TextView coordinateTextView = rootView.findViewById(R.id.location_coordinate);
         NumberFormat nf = NumberFormat.getNumberInstance();
         nf.setMaximumFractionDigits(5);
         nf.setRoundingMode(RoundingMode.UP);
-        String coordinate = "( " + nf.format(carSelfNow.getLatLng().latitude) + " , " + nf.format(carSelfNow.getLatLng().longitude) + " )";
+        String coordinate = "( " + nf.format(carSelf.getLatLng().latitude) + " , " + nf.format(carSelf.getLatLng().longitude) + " )";
         coordinateTextView.setText(coordinate);
     }
 }

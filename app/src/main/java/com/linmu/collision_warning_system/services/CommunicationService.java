@@ -13,11 +13,13 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
 
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.utils.CoordinateConverter;
 import com.linmu.collision_warning_system.services.udp.UdpReceiver;
 import com.linmu.collision_warning_system.services.udp.UdpSender;
 import com.linmu.collision_warning_system.utils.IpUtil;
 import com.linmu.collision_warning_system.utils.PropertiesUtil;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -34,8 +36,11 @@ import java.util.concurrent.TimeUnit;
  * 通信服务类
  */
 public class CommunicationService {
-    private static final CommunicationService INSTANCE = new CommunicationService();
+    private static CommunicationService INSTANCE;
     public static CommunicationService getInstance() {
+        if(INSTANCE == null) {
+            INSTANCE = new CommunicationService();
+        }
         return INSTANCE;
     }
 
@@ -78,8 +83,11 @@ public class CommunicationService {
     private UdpReceiver receiver;
     private UdpSender sender;
     private ThreadPoolExecutor mThreadPool;
+    private final CarManageService carManageService;
 
-    private CommunicationService() {}
+    private CommunicationService() {
+        carManageService = CarManageService.getInstance();
+    }
     public void startReceive() {
         if(checkNetNotAvailable()) return;
         mThreadPool.execute(() -> {
@@ -157,29 +165,38 @@ public class CommunicationService {
 
     private boolean doHandleLocationMessage(@NonNull Message msg) {
         JSONObject resJsonObject = (JSONObject) msg.obj;
-        if(CarManageService.getCarSelf() == null) {
-            Log.w("doHandleReceiveMessage", "本车还没有完成初始化! 拒绝处理接收消息!");
-            return false;
-        }
+
+        // 发送消息给log页面显示
+        Bundle logBundle = new Bundle();
+        logBundle.putString("log",resJsonObject.toString());
+        fragmentManager.setFragmentResult("NcsLog",logBundle);
 
         // 解析数据包
         int tag;
-        JSONObject data;
-        String obuId;
-        double latitude,longitude,direction,speed;
         try {
             tag = resJsonObject.getInt("tag");
             if(tag == 2101) {
-                data = resJsonObject.getJSONObject("data");
-                obuId = data.getString("device_id");
-                latitude = data.getDouble("lat");
-                longitude = data.getDouble("lon");
-                direction = data.getDouble("hea");
-                speed = data.getDouble("spd");
+                JSONObject carData = resJsonObject.getJSONObject("data");
+                handleCarInfo(carData);
+
+                Bundle ncsCarInfoUpdateSignal = new Bundle();
+                ncsCarInfoUpdateSignal.putInt("type",1);
+                fragmentManager.setFragmentResult("NcsLocationForMap",ncsCarInfoUpdateSignal);
+                fragmentManager.setFragmentResult("NcsLocationForCarInfo",ncsCarInfoUpdateSignal);
+//                Log.i("MyLogTag", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, carData));
             }
             else if (tag == 2102){
-                // TODO 多车位置处理
-                return true;
+                JSONArray carsData = resJsonObject.getJSONArray("data");
+                int length = carsData.length();
+                for (int i = 0; i < length; i++) {
+                    JSONObject carData = carsData.getJSONObject(i);
+                    handleCarInfo(carData);
+                }
+                carManageService.updateCarsLife();
+                Bundle ncsCarInfoUpdateSignal = new Bundle();
+                ncsCarInfoUpdateSignal.putInt("type",2);
+                fragmentManager.setFragmentResult("NcsLocationForMap",ncsCarInfoUpdateSignal);
+//                Log.i("MyLogTag", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, carsData));
             }
             else {
                 Log.e("doHandleReceiveMessage", "无法处理的tag");
@@ -188,21 +205,23 @@ public class CommunicationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        Log.i("handleMessage", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, data));
-
-        // 更新车辆信息
-        CarManageService.updateCarSelf(new LatLng(latitude,longitude), (float) speed, (float) direction);
-
-        Bundle logBundle = new Bundle();
-        logBundle.putString("log",resJsonObject.toString());
-        fragmentManager.setFragmentResult("NcsLog",logBundle);
-
-        Bundle ncsCarInfoUpdateSignal = new Bundle();
-        ncsCarInfoUpdateSignal.putString("obu_id",obuId);
-        fragmentManager.setFragmentResult("NcsLocationForMap",ncsCarInfoUpdateSignal);
-        fragmentManager.setFragmentResult("NcsLocationForCarInfo",ncsCarInfoUpdateSignal);
-
         return true;
+    }
+    private void handleCarInfo(@NonNull JSONObject carData) throws JSONException {
+        // 解析 json 对象
+        String obuId = carData.getString("device_id");
+        double latitude = carData.getDouble("lat");
+        double longitude = carData.getDouble("lon");
+        double speed = carData.getDouble("spd");
+        double direction = carData.getDouble("hea");
+        // 坐标转换
+        LatLng latLng = new LatLng(latitude,longitude);
+        CoordinateConverter coordinateConverter = new CoordinateConverter()
+                .from(CoordinateConverter.CoordType.GPS)
+                .coord(latLng);
+        latLng = coordinateConverter.convert();
+        // 更新车辆信息
+        carManageService.addCarInfo(obuId, latLng, (float)speed, (float)direction);
     }
     private boolean checkNetNotAvailable() {
         if(IpUtil.getIpAddress() == null) {
