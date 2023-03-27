@@ -98,6 +98,20 @@ public class CommunicationService {
             }
         });
     }
+    public void sentAndReceiveTest(int port, JSONObject jsonObject,long waitTime){
+        if(checkNetNotAvailable()) return;
+        mThreadPool.execute(() -> {
+            try {
+                Thread.sleep(waitTime);
+                // 发送消息
+                sender.send(port,jsonObject);
+                // 接收消息
+                receiver.receiveOnceTest(port);
+            } catch (IOException | RemoteException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
     public void sentAndReceive(JSONObject jsonObject,long waitTime){
         if(checkNetNotAvailable()) return;
         mThreadPool.execute(() -> {
@@ -159,6 +173,10 @@ public class CommunicationService {
                 handleRes = this.doHandleLocationMessage(msg);
                 return handleRes;
             }
+            case 9999: {
+                handleRes = this.doHandleTestMessage(msg);
+                return handleRes;
+            }
         }
         return false;
     }
@@ -199,7 +217,7 @@ public class CommunicationService {
 //                Log.i("MyLogTag", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, carsData));
             }
             else {
-                Log.e("doHandleReceiveMessage", "无法处理的tag");
+                Log.e("doHandleReceiveMessage", String.format("doHandleReceiverMessage: 无法处理的tag \n tag : %d \n  : %s", tag, resJsonObject));
                 return false;
             }
         } catch (JSONException e) {
@@ -222,6 +240,8 @@ public class CommunicationService {
         latLng = coordinateConverter.convert();
         // 更新车辆信息
         carManageService.addCarInfo(obuId, latLng, (float)speed, (float)direction);
+
+
     }
     private boolean checkNetNotAvailable() {
         if(IpUtil.getIpAddress() == null) {
@@ -235,5 +255,23 @@ public class CommunicationService {
     protected void finalize() throws Throwable {
         super.finalize();
         receiver.stopReceive();
+    }
+
+    private boolean doHandleTestMessage(@NonNull Message msg) {
+        JSONObject jsonObject = (JSONObject) msg.obj;
+        Log.w("MyLogTag", String.format("doHandleTestMessage: %s",jsonObject));
+        long time;
+        try {
+            JSONObject carData = jsonObject.getJSONObject("data");
+            /* 用于测试时延 */
+            time = carData.getLong("current_time");
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+        // 发送消息给log页面显示
+        Bundle timeBundle = new Bundle();
+        timeBundle.putLong("time",time);
+        fragmentManager.setFragmentResult("NcsTime",timeBundle);
+        return true;
     }
 }

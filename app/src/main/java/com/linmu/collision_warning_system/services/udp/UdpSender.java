@@ -2,6 +2,8 @@ package com.linmu.collision_warning_system.services.udp;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -30,7 +32,7 @@ public class UdpSender {
         this.targetPort = Integer.parseInt(targetPort);
     }
 
-    public void send(int port, JSONObject jsonObject) throws IOException {
+    public void send(int port, @NonNull JSONObject jsonObject) throws IOException {
         // 将数据转化为byte[]
         byte[] buff = jsonObject.toString().getBytes(StandardCharsets.US_ASCII);//发送过来的数据的长度范围
         // 组装数据包(数据，偏移量，数据长度，目标IP地址，目标端口号)
@@ -39,7 +41,7 @@ public class UdpSender {
         DatagramSocket sendSocket = port == -1 ? new DatagramSocket() : new DatagramSocket(port);
         sendSocket.send(packet);
         sendSocket.close();
-        Log.i("sendMessage",String.format("send:ip: %s port: %s json: %s",targetIp.getHostAddress(),targetPort, jsonObject));
+        Log.i("sendMessage",String.format("send:ip: %s port: %s json: %s",targetIp.getHostAddress(),port, jsonObject));
     }
 
 }

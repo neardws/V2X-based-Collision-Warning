@@ -54,12 +54,15 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs',include: '*.jar')
-
+    // 百度地图
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Map:7.5.5'
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Search:7.5.5'
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Util:7.5.5'
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.4.0'
+    // 速度曲线UI
     implementation 'com.txusballesteros:snake:1.0'
+    // 定时任务
+    implementation 'org.quartz-scheduler:quartz:2.3.2'
 
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'

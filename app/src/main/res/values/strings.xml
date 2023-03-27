@@ -6,9 +6,9 @@
     <string name="speedValue">0.0</string>
     <string name="speedTableImg">速度表盘图片</string>
     <string name="speedUnit">km/s</string>
-    <string name="inputEditText">{\"tag\":1001}</string>
-    <string name="send_button_text">发送</string>
+    <string name="send_button_text">测试时延</string>
     <string name="receive_text">接受到的消息</string>
-    <string name="obuIdValue">XXXXXX</string>
+    <string name="obuIdValue">XXX XXX</string>
     <string name="obuIdText">OBU ID:</string>
+    <string name="delayDataText">时延数据</string>
 </resources>

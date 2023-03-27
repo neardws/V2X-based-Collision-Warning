@@ -59,6 +59,22 @@ public class UdpReceiver {
         }
         return jsonObject;
     }
+    public void receiveOnceTest(int port) throws RemoteException, IOException {
+        // 创建通信
+        DatagramSocket socket = new DatagramSocket(port);
+        JSONObject jsonObject = receive(socket);
+        socket.close();
+
+        if(mServer == null) {
+            Log.e("receiveOnce", "Message Server 还没有初始化");
+            return;
+        }
+        // 将消息发送给主线程
+        Message message = new Message();
+        message.what = 9999;
+        message.obj = jsonObject;
+        mServer.send(message);
+    }
 
     public void receiveOnce(int port) throws RemoteException, IOException {
         // 创建通信
