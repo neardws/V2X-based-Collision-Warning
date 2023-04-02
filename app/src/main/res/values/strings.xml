@@ -11,4 +11,5 @@
     <string name="obuIdValue">XXX XXX</string>
     <string name="obuIdText">OBU ID:</string>
     <string name="delayDataText">时延数据</string>
+    <string name="warn_button">警告</string>
 </resources>

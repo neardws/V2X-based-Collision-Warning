@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -59,10 +58,18 @@ public class CommunicationFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Button sentButton = view.findViewById(R.id.sendButton);
+        Button warnButton = view.findViewById(R.id.warnButton);
         sentButton.setOnClickListener(this::doOnSendButtonClick);
+        warnButton.setOnClickListener(this::doWarnButtonClick);
     }
     private void doOnSendButtonClick(View view) {
         this.sentAskNcsMessage();
+    }
+    private void doWarnButtonClick(View view) {
+        FragmentManager fragmentManager = getParentFragmentManager();
+        Bundle bundle = new Bundle();
+        bundle.putInt("warning",1);
+        fragmentManager.setFragmentResult("warning",bundle);
     }
     private void doHandleNcsLog(String requestKey, @NonNull Bundle result) {
         String res = result.getString("log");

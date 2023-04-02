@@ -216,8 +216,12 @@ public class CommunicationService {
                 fragmentManager.setFragmentResult("NcsLocationForMap",ncsCarInfoUpdateSignal);
 //                Log.i("MyLogTag", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, carsData));
             }
+            else if (tag == 2113) {
+                // TODO 处理OBU状态信息
+                Log.w("MyLogTag", String.format("doHandleLocationMessage: OBU 状态信息 : \n %s", resJsonObject));
+            }
             else {
-                Log.e("doHandleReceiveMessage", String.format("doHandleReceiverMessage: 无法处理的tag \n tag : %d \n  : %s", tag, resJsonObject));
+                Log.e("MyLogTag", String.format("doHandleReceiverMessage: 无法处理的tag \n tag : %d \n  : %s", tag, resJsonObject));
                 return false;
             }
         } catch (JSONException e) {

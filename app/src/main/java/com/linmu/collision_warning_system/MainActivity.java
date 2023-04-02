@@ -1,6 +1,7 @@
 package com.linmu.collision_warning_system;
 
 import android.Manifest;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -86,6 +87,9 @@ public class MainActivity extends FragmentActivity {
         CommunicationFragment communicationFragment = (CommunicationFragment) list.get(1);
         communicationFragment.initCommunication();
 
+        FragmentManager mFragmentManager = getSupportFragmentManager();
+        mFragmentManager.setFragmentResultListener("warning",this, this::doHandleWarning);
+
         MyFragmentAdapter myFragmentAdapter = new MyFragmentAdapter(fragmentManager,getLifecycle(),list);
         ViewPager2 viewPager = findViewById(R.id.viewpage2);
         viewPager.setAdapter(myFragmentAdapter);
@@ -96,6 +100,12 @@ public class MainActivity extends FragmentActivity {
             }
         });
         viewPager.setCurrentItem(1);
+    }
+    private void doHandleWarning(String requestKey, @NonNull Bundle result) {
+//        int type = result.getInt("warning");
+        Dialog dialog = new Dialog(this, R.style.warning_dialog_style);
+
+        dialog.show();
     }
 
     /**

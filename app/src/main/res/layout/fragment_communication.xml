@@ -29,4 +29,10 @@
         android:gravity="center"
         android:text="@string/receive_text"/>
 
+    <Button
+        android:id="@+id/warnButton"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:text="@string/warn_button"/>
+
 </LinearLayout>
