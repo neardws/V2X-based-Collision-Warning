@@ -244,8 +244,6 @@ public class CommunicationService {
         latLng = coordinateConverter.convert();
         // 更新车辆信息
         carManageService.addCarInfo(obuId, latLng, (float)speed, (float)direction);
-
-
     }
     private boolean checkNetNotAvailable() {
         if(IpUtil.getIpAddress() == null) {

@@ -1,5 +1,7 @@
 package com.linmu.collision_warning_system.services;
 
+import androidx.annotation.NonNull;
+
 import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.Entry.Car;
 
@@ -60,24 +62,28 @@ public class CarManageService {
         }
     }
 
-    public void addCarInfo(String obuId, LatLng newLatlng, float newSpeed, float newDirection) {
-        Car car;
+    public void addCarInfo(@NonNull String obuId, LatLng newLatlng, float newSpeed, float newDirection) {
         if(obuId.equals(carSelfId)) {
-            if(carSelf == null) {
-                carSelf = new Car(obuId, newLatlng, newSpeed, newDirection);
-            }
-            car = carSelf;
+            addSelfCarInfo(obuId, newLatlng, newSpeed, newDirection);
         }
         else {
-            car = carMap.get(obuId);
-            if(car == null) {
-                car = new Car(obuId, newLatlng, newSpeed, newDirection);
-            }
+            addOthersCarInfo(obuId, newLatlng, newSpeed, newDirection);
         }
-
-
-        car.addCarInfo(newLatlng, newSpeed, newDirection);
-        car.keepLife();
+    }
+    private void addSelfCarInfo(String obuId, LatLng newLatlng, float newSpeed, float newDirection) {
+        if(carSelf == null) {
+            carSelf = new Car(obuId, newLatlng, newSpeed, newDirection);
+        }
+        carSelf.addCarInfo(newLatlng, newSpeed, newDirection);
+        carSelf.keepLife();
+    }
+    private void addOthersCarInfo(String obuId, LatLng newLatlng, float newSpeed, float newDirection) {
+        Car car = carMap.get(obuId);
+        if(car == null) {
+            car = new Car(obuId, newLatlng, newSpeed, newDirection);
+        }
+        carSelf.addCarInfo(newLatlng, newSpeed, newDirection);
+        carSelf.keepLife();
         carMap.put(obuId,car);
     }
 }

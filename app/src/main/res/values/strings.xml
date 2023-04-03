@@ -5,7 +5,7 @@
     <string name="car_img_description">车辆图</string>
     <string name="speedValue">0.0</string>
     <string name="speedTableImg">速度表盘图片</string>
-    <string name="speedUnit">km/s</string>
+    <string name="speedUnit">km/h</string>
     <string name="send_button_text">测试时延</string>
     <string name="receive_text">接受到的消息</string>
     <string name="obuIdValue">XXX XXX</string>
