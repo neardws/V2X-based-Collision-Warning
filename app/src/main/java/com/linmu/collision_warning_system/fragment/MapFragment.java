@@ -134,7 +134,7 @@ public class MapFragment extends Fragment {
             Car carSelf = CarManageService.getCarSelf();
             LatLng latLng = carSelf.getLatLng();
             MyLocationData locationData = new MyLocationData.Builder()
-                    .direction((float) carSelf.getDirection())
+                    .direction(carSelf.getDirection())
                     .latitude(latLng.latitude)
                     .longitude(latLng.longitude)
                     .build();
@@ -155,7 +155,7 @@ public class MapFragment extends Fragment {
             Log.e("MyLogTag", "doHandleNcsLocation: type 错误无法解析");
         }
     }
-    private Marker initMarker(Car car) {
+    private Marker initMarker(@NonNull Car car) {
         MarkerOptions markerOptions = new MarkerOptions()
                 .position(car.getLatLng())
                 .rotate(car.getDirection())
@@ -166,7 +166,7 @@ public class MapFragment extends Fragment {
         return marker;
     }
 
-    private void drawUpdateMarker(Car car) {
+    private void drawUpdateMarker(@NonNull Car car) {
         Marker marker = markerHashMap.get(car.getCarId());
         if(marker == null) {
             marker = initMarker(car);
@@ -177,7 +177,7 @@ public class MapFragment extends Fragment {
     /**
      * 初始化路径纹理
      */
-    private Polyline initPolyLine(Car car) {
+    private Polyline initPolyLine(@NonNull Car car) {
         // 初始化需要至少两个点数据
         List<LatLng> polylineList = new ArrayList<>(car.getLatLngDeque());
         // 绘制纹理PolyLine
@@ -194,7 +194,7 @@ public class MapFragment extends Fragment {
     /**
      * 更新&绘制路径
      */
-    private void drawUpdatePolyLine(Car car) {
+    private void drawUpdatePolyLine(@NonNull Car car) {
         List<LatLng> polylineList = new ArrayList<>(car.getLatLngDeque());
         Collections.reverse(polylineList);
         Polyline polyline = polylineHashMap.get(car.getCarId());

@@ -14,12 +14,11 @@ public class CarManageService {
     private static CarManageService INSTANCE;
     private static String carSelfId;
     private static Car carSelf = null;
-    public static boolean setCarSelfId(String carId) {
+    public static void setCarSelfId(String carId) {
         if(carSelfId != null) {
-            return false;
+            return;
         }
         carSelfId = carId;
-        return true;
     }
     public static Car getCarSelf() {
         return carSelf;
@@ -82,8 +81,8 @@ public class CarManageService {
         if(car == null) {
             car = new Car(obuId, newLatlng, newSpeed, newDirection);
         }
-        carSelf.addCarInfo(newLatlng, newSpeed, newDirection);
-        carSelf.keepLife();
+        car.addCarInfo(newLatlng, newSpeed, newDirection);
+        car.keepLife();
         carMap.put(obuId,car);
     }
 }

@@ -1,6 +1,8 @@
 package com.linmu.collision_warning_system;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
+import android.content.Context;
 import android.os.Vibrator;
 
 import com.baidu.mapapi.CoordType;
@@ -9,11 +11,21 @@ import com.baidu.mapapi.common.BaiduMapSDKException;
 
 public class Application extends android.app.Application {
 
+    @SuppressLint("StaticFieldLeak")
+    private static Context context;
     public Vibrator mVibrator;
+
+    /**
+     * 获取全局上下文*/
+    public static Context getContext() {
+        return context;
+    }
+
 
     @Override
     public void onCreate() {
         super.onCreate();
+        context = getApplicationContext();
 
         mVibrator =(Vibrator)getApplicationContext().getSystemService(Service.VIBRATOR_SERVICE);
 

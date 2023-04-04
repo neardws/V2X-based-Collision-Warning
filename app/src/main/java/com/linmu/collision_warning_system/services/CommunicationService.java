@@ -25,8 +25,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -62,8 +60,6 @@ public class CommunicationService {
                 Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.CallerRunsPolicy());
         INSTANCE.singlePort = Integer.parseInt(config.getProperty("single.port"));
-        INSTANCE.activatePort = Integer.parseInt(config.getProperty("activate.port"));
-        INSTANCE.activatePeriod = Long.parseLong(config.getProperty("activate.period"));
 
         String receivePort = config.getProperty("receive.port");
         String buffSize = config.getProperty("BUFF_SIZE");
@@ -77,9 +73,7 @@ public class CommunicationService {
         INSTANCE.receiver.setHandler(receiverHandler);
     }
     private FragmentManager fragmentManager;
-    private int singlePort,activatePort;
-    private long activatePeriod;
-    private volatile boolean activateFlag;
+    private int singlePort;
     private UdpReceiver receiver;
     private UdpSender sender;
     private ThreadPoolExecutor mThreadPool;
@@ -112,16 +106,15 @@ public class CommunicationService {
             }
         });
     }
-    public void sentAndReceive(JSONObject jsonObject,long waitTime){
+    public void sentAndReceiveNcs(JSONObject jsonObject){
         if(checkNetNotAvailable()) return;
         mThreadPool.execute(() -> {
             try {
-                Thread.sleep(waitTime);
                 // 发送消息
                 sender.send(singlePort,jsonObject);
                 // 接收消息
                 receiver.receiveOnce(singlePort);
-            } catch (IOException | RemoteException | InterruptedException e) {
+            } catch (IOException | RemoteException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -136,29 +129,8 @@ public class CommunicationService {
             }
         });
     }
-    public void sendMessageConstantly(JSONObject jsonObject) {
-        if(checkNetNotAvailable()) return;
-        activateFlag = true;
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if(!activateFlag) {
-                    timer.cancel();
-                }
-                try {
-                    // 发送消息
-                    sender.send(activatePort,jsonObject);
-                    // 接收消息
-                    receiver.receiveOnce(activatePort);
-                } catch (IOException | RemoteException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        },0,this.activatePeriod);
-    }
+
     public void stopCommunication() {
-        activateFlag = false;
         receiver.stopReceive();
     }
 

@@ -43,7 +43,7 @@ public class Car {
         return life;
     }
     public void keepLife() {
-        this.life = 10;
+        this.life = 100;
     }
     public void updateLife() {
         this.life -= 1;
