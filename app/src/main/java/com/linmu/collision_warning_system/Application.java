@@ -12,7 +12,7 @@ import com.baidu.mapapi.common.BaiduMapSDKException;
 public class Application extends android.app.Application {
 
     @SuppressLint("StaticFieldLeak")
-    private static Context context;
+    private static Context context; // TODO 临时写法
     public Vibrator mVibrator;
 
     /**

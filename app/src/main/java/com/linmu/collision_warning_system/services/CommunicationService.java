@@ -17,6 +17,8 @@ import com.baidu.mapapi.utils.CoordinateConverter;
 import com.linmu.collision_warning_system.services.udp.UdpReceiver;
 import com.linmu.collision_warning_system.services.udp.UdpSender;
 import com.linmu.collision_warning_system.utils.IpUtil;
+import com.linmu.collision_warning_system.utils.MessageType;
+import com.linmu.collision_warning_system.utils.NcsTag;
 import com.linmu.collision_warning_system.utils.PropertiesUtil;
 
 import org.json.JSONArray;
@@ -133,19 +135,23 @@ public class CommunicationService {
     public void stopCommunication() {
         receiver.stopReceive();
     }
-
+    // TODO 这里通信服务和NCS定位服务双向依赖
     private boolean doHandleReceiveMessage(@NonNull Message msg) {
         boolean handleRes;
-        switch (msg.what) {
-            case 1111: {
+        MessageType messageType = MessageType.getMessageType(msg.what);
+        if(messageType == null) {
+            return false;
+        }
+        switch (messageType) {
+            case Once: {
                 handleRes = NcsLocationService.getInstance().doHandleReceiveOnceMessage(msg);
                 return handleRes;
             }
-            case 2222: {
+            case Push: {
                 handleRes = this.doHandleLocationMessage(msg);
                 return handleRes;
             }
-            case 9999: {
+            case Log: {
                 handleRes = this.doHandleTestMessage(msg);
                 return handleRes;
             }
@@ -165,7 +171,7 @@ public class CommunicationService {
         int tag;
         try {
             tag = resJsonObject.getInt("tag");
-            if(tag == 2101) {
+            if(tag == NcsTag.ThisCarInfo.getTag()) {
                 JSONObject carData = resJsonObject.getJSONObject("data");
                 handleCarInfo(carData);
 
@@ -175,7 +181,7 @@ public class CommunicationService {
                 fragmentManager.setFragmentResult("NcsLocationForCarInfo",ncsCarInfoUpdateSignal);
 //                Log.i("MyLogTag", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, carData));
             }
-            else if (tag == 2102){
+            else if (tag == NcsTag.OtherCarInfo.getTag()){
                 JSONArray carsData = resJsonObject.getJSONArray("data");
                 int length = carsData.length();
                 for (int i = 0; i < length; i++) {
@@ -188,7 +194,7 @@ public class CommunicationService {
                 fragmentManager.setFragmentResult("NcsLocationForMap",ncsCarInfoUpdateSignal);
 //                Log.i("MyLogTag", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, carsData));
             }
-            else if (tag == 2113) {
+            else if (tag == NcsTag.StateInfo.getTag()) {
                 // TODO 处理OBU状态信息
                 Log.w("MyLogTag", String.format("doHandleLocationMessage: OBU 状态信息 : \n %s", resJsonObject));
             }

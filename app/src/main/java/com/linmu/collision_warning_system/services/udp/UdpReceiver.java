@@ -6,6 +6,10 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.linmu.collision_warning_system.utils.MessageType;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -23,18 +27,16 @@ public class UdpReceiver {
     private final int BUFF_SIZE;
     private boolean stop;
     private Messenger mServer = null;
-
     public UdpReceiver(String receivePort, String buffSize) {
         this.port = Integer.parseInt(receivePort);
         this.BUFF_SIZE = Integer.parseInt(buffSize);
         stop = false;
     }
-
     public void setHandler(Handler receiverHandler) {
         mServer = new Messenger(receiverHandler);
     }
 
-    private JSONObject receive(DatagramSocket socket) throws IOException {
+    private JSONObject receive(@NonNull DatagramSocket socket) throws IOException {
         JSONObject jsonObject;
         DatagramPacket receivePacket;
         byte[] buff = new byte[BUFF_SIZE];//发送过来的数据的长度范围
@@ -71,7 +73,7 @@ public class UdpReceiver {
         }
         // 将消息发送给主线程
         Message message = new Message();
-        message.what = 9999;
+        message.what = MessageType.Log.getType();
         message.obj = jsonObject;
         mServer.send(message);
     }
@@ -88,7 +90,7 @@ public class UdpReceiver {
         }
         // 将消息发送给主线程
         Message message = new Message();
-        message.what = 1111;
+        message.what = MessageType.Once.getType();
         message.obj = jsonObject;
         mServer.send(message);
     }
@@ -109,7 +111,7 @@ public class UdpReceiver {
 
             // 创建消息并发送
             Message receivedMessage = Message.obtain();
-            receivedMessage.what = 2222;
+            receivedMessage.what = MessageType.Push.getType();
             receivedMessage.obj = jsonObject;
             mServer.send(receivedMessage);
         }

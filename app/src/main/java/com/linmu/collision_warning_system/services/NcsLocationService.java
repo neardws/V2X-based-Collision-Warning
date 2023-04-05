@@ -7,51 +7,80 @@ import androidx.annotation.NonNull;
 
 import com.linmu.collision_warning_system.Application;
 import com.linmu.collision_warning_system.utils.IpUtil;
+import com.linmu.collision_warning_system.utils.NcsTag;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**   
+ * @version V1.0   
+ * @name Ncs定位服务
+ * @author linmu
+ * @description TODO
+ * @date 2023-04-05 14:02
+*/
 public class NcsLocationService {
-
+    /** 类静态实例 **/
     private static NcsLocationService INSTANCE;
+    /**
+     *@name 获取实例
+     *@author linmu
+     *@description 获取类的单例(懒汉式)
+     *@return NcsLocationService INSTANCE
+     *@date 2023-04-05 14:04
+     */
     public static NcsLocationService getInstance() {
         if(INSTANCE == null) {
             INSTANCE = new NcsLocationService();
         }
         return INSTANCE;
     }
+    /** NCS 登录时注册的标识 **/
     private String unique = null;
+    /** 通信服务 **/
     private CommunicationService communicationService;
     private NcsLocationService() {}
+    /**
+     *@name 处理单次接收的消息
+     *@author linmu
+     *@description 用于处理仅会接收一次的消息
+     *@param msg 接收到的消息体
+     *@return boolean 处理结果
+     *@date 2023-04-05 14:07
+     */
     public boolean doHandleReceiveOnceMessage(@NonNull Message msg) {
         JSONObject res = (JSONObject) msg.obj;
         int tag;
         try {
-            tag = (int) res.get("tag");
+            tag = res.getInt("tag");
         } catch (JSONException e) {
             logoutNcs();
             throw new RuntimeException(e);
         }
-        switch (tag) {
-            case 1002: {
+        NcsTag ncsTag = NcsTag.getTag(tag);
+        if(ncsTag == null) {
+            return false;
+        }
+        switch (ncsTag) {
+            case BroadcastReturn: {
                 doHandleStateCheckRes(res);
                 break;
             }
-            case 2002: {
+            case LoginReturn: {
                 doHandleLoginRes(res);
                 break;
             }
             default:
                 return false;
         }
-        return false;
+        return true;
     }
 
     public void checkNcsState() {
         JSONObject askNcsState;
         try {
             askNcsState = new JSONObject();
-            askNcsState.put("tag",1001);
+            askNcsState.put("tag", NcsTag.Broadcast.getTag());
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
@@ -63,7 +92,7 @@ public class NcsLocationService {
         Log.w("MyLogTag", "loginNcs: 开始尝试登录!");
         JSONObject loginNcs = new JSONObject();
         try {
-            loginNcs.put("tag",2001);
+            loginNcs.put("tag",NcsTag.Login.getTag());
             JSONObject loginNcs_data = new JSONObject();
             loginNcs_data.put("ip", IpUtil.getIpAddress());
             loginNcs_data.put("port",50501);
@@ -78,7 +107,7 @@ public class NcsLocationService {
     public void keepNcsAlive() {
         JSONObject activateNcs = new JSONObject();
         try {
-            activateNcs.put("tag",2006);
+            activateNcs.put("tag",NcsTag.Activate.getTag());
             activateNcs.put("unique", unique);
         } catch (JSONException e) {
             throw new RuntimeException(e);
@@ -129,7 +158,7 @@ public class NcsLocationService {
         JSONObject logoutNcs;
         try {
             logoutNcs = new JSONObject();
-            logoutNcs.put("tag",2003);
+            logoutNcs.put("tag",NcsTag.Logout.getTag());
             logoutNcs.put("ip", unique);
         } catch (JSONException e) {
             throw new RuntimeException(e);
