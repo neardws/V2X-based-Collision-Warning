@@ -5,24 +5,17 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
 
-import com.baidu.mapapi.model.LatLng;
-import com.baidu.mapapi.utils.CoordinateConverter;
 import com.linmu.collision_warning_system.services.udp.UdpReceiver;
 import com.linmu.collision_warning_system.services.udp.UdpSender;
 import com.linmu.collision_warning_system.utils.IpUtil;
-import com.linmu.collision_warning_system.utils.MessageType;
-import com.linmu.collision_warning_system.utils.NcsTag;
 import com.linmu.collision_warning_system.utils.PropertiesUtil;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -71,7 +64,7 @@ public class CommunicationService {
         String targetPort = config.getProperty("send.targetPort");
         INSTANCE.sender = new UdpSender(targetIp,targetPort);
         // 接受消息的 handler，具体处理放在 doHandleReceiveMessage
-        Handler receiverHandler = new Handler(Looper.getMainLooper(), INSTANCE::doHandleReceiveMessage);
+        Handler receiverHandler = new Handler(Looper.getMainLooper(), NcsLocationService.getInstance()::doHandleReceiveMessage);
         INSTANCE.receiver.setHandler(receiverHandler);
     }
     private FragmentManager fragmentManager;
@@ -79,11 +72,7 @@ public class CommunicationService {
     private UdpReceiver receiver;
     private UdpSender sender;
     private ThreadPoolExecutor mThreadPool;
-    private final CarManageService carManageService;
-
-    private CommunicationService() {
-        carManageService = CarManageService.getInstance();
-    }
+    private CommunicationService() {}
     public void startReceive() {
         if(checkNetNotAvailable()) return;
         mThreadPool.execute(() -> {
@@ -93,6 +82,9 @@ public class CommunicationService {
                 throw new RuntimeException(e);
             }
         });
+    }
+    public void passMessageToUI(@NonNull String tag, Bundle bundle) {
+        fragmentManager.setFragmentResult(tag,bundle);
     }
     public void sentAndReceiveTest(int port, JSONObject jsonObject,long waitTime){
         if(checkNetNotAvailable()) return;
@@ -132,97 +124,6 @@ public class CommunicationService {
         });
     }
 
-    public void stopCommunication() {
-        receiver.stopReceive();
-    }
-    // TODO 这里通信服务和NCS定位服务双向依赖
-    private boolean doHandleReceiveMessage(@NonNull Message msg) {
-        boolean handleRes;
-        MessageType messageType = MessageType.getMessageType(msg.what);
-        if(messageType == null) {
-            return false;
-        }
-        switch (messageType) {
-            case Once: {
-                handleRes = NcsLocationService.getInstance().doHandleReceiveOnceMessage(msg);
-                return handleRes;
-            }
-            case Push: {
-                handleRes = this.doHandleLocationMessage(msg);
-                return handleRes;
-            }
-            case Log: {
-                handleRes = this.doHandleTestMessage(msg);
-                return handleRes;
-            }
-        }
-        return false;
-    }
-
-    private boolean doHandleLocationMessage(@NonNull Message msg) {
-        JSONObject resJsonObject = (JSONObject) msg.obj;
-
-        // 发送消息给log页面显示
-        Bundle logBundle = new Bundle();
-        logBundle.putString("log",resJsonObject.toString());
-        fragmentManager.setFragmentResult("NcsLog",logBundle);
-
-        // 解析数据包
-        int tag;
-        try {
-            tag = resJsonObject.getInt("tag");
-            if(tag == NcsTag.ThisCarInfo.getTag()) {
-                JSONObject carData = resJsonObject.getJSONObject("data");
-                handleCarInfo(carData);
-
-                Bundle ncsCarInfoUpdateSignal = new Bundle();
-                ncsCarInfoUpdateSignal.putInt("type",1);
-                fragmentManager.setFragmentResult("NcsLocationForMap",ncsCarInfoUpdateSignal);
-                fragmentManager.setFragmentResult("NcsLocationForCarInfo",ncsCarInfoUpdateSignal);
-//                Log.i("MyLogTag", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, carData));
-            }
-            else if (tag == NcsTag.OtherCarInfo.getTag()){
-                JSONArray carsData = resJsonObject.getJSONArray("data");
-                int length = carsData.length();
-                for (int i = 0; i < length; i++) {
-                    JSONObject carData = carsData.getJSONObject(i);
-                    handleCarInfo(carData);
-                }
-                carManageService.updateCarsLife();
-                Bundle ncsCarInfoUpdateSignal = new Bundle();
-                ncsCarInfoUpdateSignal.putInt("type",2);
-                fragmentManager.setFragmentResult("NcsLocationForMap",ncsCarInfoUpdateSignal);
-//                Log.i("MyLogTag", String.format("doHandleReceiverMessage: \n tag : %d \n data : %s", tag, carsData));
-            }
-            else if (tag == NcsTag.StateInfo.getTag()) {
-                // TODO 处理OBU状态信息
-                Log.w("MyLogTag", String.format("doHandleLocationMessage: OBU 状态信息 : \n %s", resJsonObject));
-            }
-            else {
-                Log.e("MyLogTag", String.format("doHandleReceiverMessage: 无法处理的tag \n tag : %d \n  : %s", tag, resJsonObject));
-                return false;
-            }
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        return true;
-    }
-    private void handleCarInfo(@NonNull JSONObject carData) throws JSONException {
-        // 解析 json 对象
-        String obuId = carData.getString("device_id");
-        double latitude = carData.getDouble("lat");
-        double longitude = carData.getDouble("lon");
-        double speed = carData.getDouble("spd");
-        double direction = carData.getDouble("hea");
-        // 坐标转换
-        LatLng latLng = new LatLng(latitude,longitude);
-        CoordinateConverter coordinateConverter = new CoordinateConverter()
-                .from(CoordinateConverter.CoordType.GPS)
-                .coord(latLng);
-        latLng = coordinateConverter.convert();
-        // 更新车辆信息
-        carManageService.addCarInfo(obuId, latLng, (float)speed, (float)direction);
-    }
     private boolean checkNetNotAvailable() {
         if(IpUtil.getIpAddress() == null) {
             Log.e("MyLogTag", "sentAndReceive: 没有连接到网络！");
@@ -231,27 +132,14 @@ public class CommunicationService {
         return false;
     }
 
+    public void stopCommunication() {
+        receiver.stopReceive();
+    }
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
         receiver.stopReceive();
     }
 
-    private boolean doHandleTestMessage(@NonNull Message msg) {
-        JSONObject jsonObject = (JSONObject) msg.obj;
-        Log.w("MyLogTag", String.format("doHandleTestMessage: %s",jsonObject));
-        long time;
-        try {
-            JSONObject carData = jsonObject.getJSONObject("data");
-            /* 用于测试时延 */
-            time = carData.getLong("current_time");
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        // 发送消息给log页面显示
-        Bundle timeBundle = new Bundle();
-        timeBundle.putLong("time",time);
-        fragmentManager.setFragmentResult("NcsTime",timeBundle);
-        return true;
-    }
+
 }
