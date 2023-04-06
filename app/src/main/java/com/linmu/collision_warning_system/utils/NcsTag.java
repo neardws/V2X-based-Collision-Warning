@@ -2,8 +2,6 @@ package com.linmu.collision_warning_system.utils;
 
 import androidx.annotation.Nullable;
 
-import org.jetbrains.annotations.Contract;
-
 /**
  * @author linmu
  * @version V1.0
@@ -33,7 +31,6 @@ public enum NcsTag {
         this.description = description;
     }
     @Nullable
-    @Contract(pure = true)
     public static NcsTag getTag(int tag) {
         for(NcsTag item:NcsTag.values()) {
             if(item.tag == tag) {
