@@ -2,8 +2,6 @@ package com.linmu.collision_warning_system.utils;
 
 import androidx.annotation.Nullable;
 
-import org.jetbrains.annotations.Contract;
-
 /**
  * @version V1.0
  * @name MessageType
@@ -12,27 +10,26 @@ import org.jetbrains.annotations.Contract;
  * @date 2023-04-05 15:20
 */
 public enum MessageType {
-    Once(1111,"单次消息"),
-    Push(2222,"推送消息"),
-    Log(9999,"日志消息");
-    private final int type;
+    Once("receive.once.port","单次消息"),
+    Push("receive.push.port","推送消息"),
+    Log("log.port","日志消息");
+    private final int port;
     private final String description;
-    MessageType(int type, String description) {
-        this.type = type;
+    MessageType(String type, String description) {
         this.description = description;
+        this.port =Integer.parseInt(PropertiesUtil.getValue(type));
     }
     @Nullable
-    @Contract(pure = true)
-    public static MessageType getMessageType(int type) {
+    public static MessageType getMessageType(int port) {
         for(MessageType item:MessageType.values()) {
-            if(item.type == type) {
+            if(item.port == port) {
                 return item;
             }
         }
         return null;
     }
-    public int getType() {
-        return type;
+    public int getPort() {
+        return port;
     }
     public String getDescription() {
         return description;

@@ -14,10 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.linmu.collision_warning_system.R;
-import com.linmu.collision_warning_system.services.CommunicationService;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.linmu.collision_warning_system.services.NcsLocationService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +28,6 @@ public class CommunicationFragment extends Fragment {
 
     private Long lastTime;
     private List<Long> delayList;
-    private CommunicationService communicationService;
 
     private CommunicationFragment() {
         // Required empty public constructor
@@ -49,7 +45,7 @@ public class CommunicationFragment extends Fragment {
         delayList = new ArrayList<>();
     }
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_communication, container, false);
@@ -63,41 +59,14 @@ public class CommunicationFragment extends Fragment {
         warnButton.setOnClickListener(this::doWarnButtonClick);
     }
     private void doOnSendButtonClick(View view) {
-        this.sentAskNcsMessage();
-    }
-    private void doWarnButtonClick(View view) {
-        FragmentManager fragmentManager = getParentFragmentManager();
-        Bundle bundle = new Bundle();
-        bundle.putInt("warning",1);
-        fragmentManager.setFragmentResult("warning",bundle);
-    }
-    private void doHandleNcsLog(String requestKey, @NonNull Bundle result) {
-        String res = result.getString("log");
-        // 更新接收消息页
-        TextView receiveTextView = this.requireView().findViewById(R.id.receiveText);
-        if(receiveTextView == null) {
-            Log.e("doHandleReceiveMessage", "receiveTextView 为空!");
-            return;
-        }
-        receiveTextView.setText(res);
-    }
-
-    private void sentAskNcsMessage() {
-        JSONObject askNcsState;
-        try {
-            askNcsState = new JSONObject();
-            askNcsState.put("tag",2112);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-        communicationService.sentAndReceiveTest(50505,askNcsState,0);
+        NcsLocationService.getInstance().sentAskNcsState();
     }
 
     private void doHandleNcsTime(String requestKey, @NonNull Bundle result) {
         long time = result.getLong("time");
         if(lastTime == 0L) {
             lastTime = time;
-            this.sentAskNcsMessage();
+            NcsLocationService.getInstance().sentAskNcsState();
             return;
         }
         long delay = (time - lastTime)/2;
@@ -115,7 +84,20 @@ public class CommunicationFragment extends Fragment {
 
         lastTime = 0L;
     }
-    public void initCommunication() {
-        this.communicationService = CommunicationService.getInstance();
+    private void doWarnButtonClick(View view) {
+        FragmentManager fragmentManager = getParentFragmentManager();
+        Bundle bundle = new Bundle();
+        bundle.putInt("warning",1);
+        fragmentManager.setFragmentResult("warning",bundle);
+    }
+    private void doHandleNcsLog(String requestKey, @NonNull Bundle result) {
+        String res = result.getString("log");
+        // 更新接收消息页
+        TextView receiveTextView = this.requireView().findViewById(R.id.receiveText);
+        if(receiveTextView == null) {
+            Log.e("doHandleReceiveMessage", "receiveTextView 为空!");
+            return;
+        }
+        receiveTextView.setText(res);
     }
 }

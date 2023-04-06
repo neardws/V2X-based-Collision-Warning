@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.linmu.collision_warning_system.utils.MessageType;
+import com.linmu.collision_warning_system.utils.PropertiesUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,13 +24,11 @@ import java.net.InetAddress;
  */
 public class UdpReceiver {
 
-    private final int port;
     private final int BUFF_SIZE;
     private boolean stop;
     private Messenger mServer = null;
-    public UdpReceiver(String receivePort, String buffSize) {
-        this.port = Integer.parseInt(receivePort);
-        this.BUFF_SIZE = Integer.parseInt(buffSize);
+    public UdpReceiver() {
+        this.BUFF_SIZE = Integer.parseInt(PropertiesUtil.getValue("BUFF_SIZE"));
         stop = false;
     }
     public void setHandler(Handler receiverHandler) {
@@ -40,16 +39,11 @@ public class UdpReceiver {
         JSONObject jsonObject;
         DatagramPacket receivePacket;
         byte[] buff = new byte[BUFF_SIZE];//发送过来的数据的长度范围
-
-
         receivePacket = new DatagramPacket(buff, buff.length);
-
         socket.receive(receivePacket);
-
         // 获取对方的IP地址
         InetAddress ipAddress = receivePacket.getAddress();
         String hostAddress = ipAddress.getHostAddress();
-
         // 获取到数据
         String msg = new String(receivePacket.getData(),0,receivePacket.getLength());
         // 将数据解析为 JSONObject
@@ -61,23 +55,6 @@ public class UdpReceiver {
         }
         return jsonObject;
     }
-    public void receiveOnceTest(int port) throws RemoteException, IOException {
-        // 创建通信
-        DatagramSocket socket = new DatagramSocket(port);
-        JSONObject jsonObject = receive(socket);
-        socket.close();
-
-        if(mServer == null) {
-            Log.e("receiveOnce", "Message Server 还没有初始化");
-            return;
-        }
-        // 将消息发送给主线程
-        Message message = new Message();
-        message.what = MessageType.Log.getType();
-        message.obj = jsonObject;
-        mServer.send(message);
-    }
-
     public void receiveOnce(int port) throws RemoteException, IOException {
         // 创建通信
         DatagramSocket socket = new DatagramSocket(port);
@@ -90,28 +67,24 @@ public class UdpReceiver {
         }
         // 将消息发送给主线程
         Message message = new Message();
-        message.what = MessageType.Once.getType();
+        message.what = port;
         message.obj = jsonObject;
         mServer.send(message);
     }
 
-    public void startReceive() throws IOException, RemoteException {
-        DatagramSocket socket = new DatagramSocket(port);
+    public void receivePushInfo() throws IOException, RemoteException {
+        DatagramSocket socket = new DatagramSocket(MessageType.Push.getPort());
         while (!stop) {
             JSONObject jsonObject;
-
             jsonObject = receive(socket);
-
             if(jsonObject == null) continue;
-
             if(mServer == null) {
                 Log.e("startReceive", "Message Server 还没有初始化");
                 continue;
             }
-
             // 创建消息并发送
             Message receivedMessage = Message.obtain();
-            receivedMessage.what = MessageType.Push.getType();
+            receivedMessage.what = MessageType.Push.getPort();
             receivedMessage.obj = jsonObject;
             mServer.send(receivedMessage);
         }

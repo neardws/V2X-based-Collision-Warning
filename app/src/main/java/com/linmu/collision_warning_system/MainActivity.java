@@ -50,7 +50,7 @@ public class MainActivity extends FragmentActivity {
         initMapFragment();
 
         // 创建通信服务
-        CommunicationService.initConfig(context,fragmentManager);
+        CommunicationService.initConfig(fragmentManager);
         communicationService = CommunicationService.getInstance();
 
         // 初始化 NCS 定位服务
@@ -70,8 +70,8 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        communicationService.stopCommunication();
         ncsLocationService.logoutNcs();
+        communicationService.stopCommunication();
     }
 
     /**
@@ -83,9 +83,6 @@ public class MainActivity extends FragmentActivity {
         list.add(OfflineMapFragment.newInstance());
         list.add(CommunicationFragment.newInstance());
         list.add(CarInfoFragment.newInstance());
-
-        CommunicationFragment communicationFragment = (CommunicationFragment) list.get(1);
-        communicationFragment.initCommunication();
 
         FragmentManager mFragmentManager = getSupportFragmentManager();
         mFragmentManager.setFragmentResultListener("warning",this, this::doHandleWarning);
