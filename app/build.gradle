@@ -49,11 +49,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
     flavorDimensions
-
-    useLibrary 'android.test.runner'
-    useLibrary 'android.test.base'
-    useLibrary 'android.test.mock'
 }
 
 dependencies {
@@ -68,6 +67,8 @@ dependencies {
 
     // 速度曲线UI
     implementation 'com.txusballesteros:snake:1.0'
+
+    implementation 'org.apache.commons:commons-math3:3.6.1'
 
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'

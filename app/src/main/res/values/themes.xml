@@ -14,13 +14,22 @@
         <!-- Customize your theme here. -->
     </style>
 
-    <style name="warning_dialog_style" parent="@android:style/Theme.Dialog">
+    <style name="warning_strong_dialog_style" parent="@android:style/Theme.Dialog">
         <item name="android:windowFrame">@null</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:background">@drawable/warn</item>
+        <item name="android:background">@drawable/warn_001</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+    <style name="warning_weak_dialog_style" parent="@android:style/Theme.Dialog">
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:background">@drawable/warn_002</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 </resources>

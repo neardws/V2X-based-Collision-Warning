@@ -22,6 +22,7 @@ public enum NcsTag {
     OtherCarInfo(2102,"OBU-NCS推送附件其他车信息"),
     InfrastructureInfo(2103,"OBU-NCS推送附件基础设施信息"),
     EventInfo(2105,"OBU-NCS推送事件信息"),
+    RsiINFO(2108,"OBU-NCS推送RSI消息"),
     State(2112,"详细状态查询请求"),
     StateInfo(2113,"OBU-NCS响应|推送NCS详细状态信息");
     private final int tag;

@@ -17,7 +17,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.baidu.mapapi.map.BaiduMapOptions;
 import com.linmu.collision_warning_system.fragment.CarInfoFragment;
-import com.linmu.collision_warning_system.fragment.CommunicationFragment;
+import com.linmu.collision_warning_system.fragment.LogFragment;
 import com.linmu.collision_warning_system.fragment.MapFragment;
 import com.linmu.collision_warning_system.fragment.MyFragmentAdapter;
 import com.linmu.collision_warning_system.fragment.OfflineMapFragment;
@@ -75,10 +75,12 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
+//        accelerationService.registerSensor();
     }
     @Override
     protected void onPause() {
         super.onPause();
+//        accelerationService.unregisterSensor();
     }
     @Override
     protected void onDestroy() {
@@ -96,7 +98,7 @@ public class MainActivity extends FragmentActivity {
         //Fragment
         List<Fragment> list = new ArrayList<>();
         list.add(OfflineMapFragment.newInstance());
-        list.add(CommunicationFragment.newInstance());
+        list.add(LogFragment.newInstance());
         list.add(CarInfoFragment.newInstance());
 
         fragmentManager.setFragmentResultListener("warning",this, this::doHandleWarning);
@@ -120,8 +122,14 @@ public class MainActivity extends FragmentActivity {
      * @date 2023-04-06 16:19
      */
     private void doHandleWarning(String requestKey, @NonNull Bundle result) {
-//        int type = result.getInt("warning");
-        Dialog dialog = new Dialog(this, R.style.warning_dialog_style);
+        int type = result.getInt("warningType");
+        Dialog dialog;
+        if(type <= 3) {
+            dialog = new Dialog(this, R.style.warning_strong_dialog_style);
+        }
+        else {
+            dialog = new Dialog(this, R.style.warning_weak_dialog_style);
+        }
         dialog.show();
 
         Timer timer = new Timer();

@@ -229,7 +229,7 @@ public class NcsLocationService {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        CarManageService.setCarSelfId(obuId);
+        CarManageService.setThisCarId(obuId);
         Log.w("checkNcsState", String.format("广播寻址成功! OBU_id: %s",obuId));
         Log.w("checkNcsState", String.format("json: %s",res));
 
@@ -276,8 +276,7 @@ public class NcsLocationService {
 
         // 发送消息给log页面显示
         Bundle logBundle = new Bundle();
-        logBundle.putString("log",jsonObject.toString());
-        communicationService.passMessageToUI("NcsLog", logBundle);
+
 
         // 解析数据包
         int tag;
@@ -285,13 +284,21 @@ public class NcsLocationService {
             tag = jsonObject.getInt("tag");
             if(tag == NcsTag.ThisCarInfo.getTag()) {
                 handleThisCarInfo(jsonObject);
+//                Log.i("MyLogTag", String.format("本车信息 : %d %s",System.currentTimeMillis(),jsonObject));
+                logBundle.putInt("type",1);
+                logBundle.putString("log",jsonObject.toString());
+                communicationService.passMessageToUI("NcsLog", logBundle);
             }
             else if (tag == NcsTag.OtherCarInfo.getTag()){
                 handleOtherCarInfo(jsonObject);
-            }
-            else if (tag == NcsTag.StateInfo.getTag()) {
+                logBundle.putInt("type",2);
+                logBundle.putString("log",jsonObject.toString());
+                communicationService.passMessageToUI("NcsLog", logBundle);
+            } else if (tag == NcsTag.RsiINFO.getTag()) {
+                doHandleRsiInfo(jsonObject.getJSONObject("data"));
+            } else if (tag == NcsTag.StateInfo.getTag()) {
                 // TODO 处理OBU状态信息
-                Log.w("MyLogTag", String.format("doHandleLocationMessage: OBU 状态信息 : \n %s", jsonObject));
+//                Log.w("MyLogTag", String.format("doHandleLocationMessage: OBU 状态信息 : \n %s", jsonObject));
             }
             else {
                 Log.e("MyLogTag", String.format("doHandleReceiverMessage: 无法处理的tag \n tag : %d \n  : %s", tag, jsonObject));
@@ -348,16 +355,22 @@ public class NcsLocationService {
         String obuId = carData.getString("device_id");
         double latitude = carData.getDouble("lat");
         double longitude = carData.getDouble("lon");
+        double altitude = carData.getDouble("ele");
         double speed = carData.getDouble("spd");
         double direction = carData.getDouble("hea");
         // 坐标转换
         LatLng latLng = new LatLng(latitude,longitude);
-        CoordinateConverter coordinateConverter = new CoordinateConverter()
-                .from(CoordinateConverter.CoordType.GPS)
-                .coord(latLng);
-        latLng = coordinateConverter.convert();
         // 更新车辆信息
-        carManageService.addCarInfo(obuId, latLng, (float)speed, (float)direction);
+        carManageService.addCarInfo(obuId, latLng, altitude, (float)speed, (float)direction);
+    }
+    private void doHandleRsiInfo(@NonNull JSONObject rsiInfo) throws JSONException {
+        int type = rsiInfo.getInt("type");
+        if(type == 10409902) {
+            Bundle bundle = new Bundle();
+            bundle.putInt("warningType",1);
+            communicationService.passMessageToUI("warning",bundle);
+            Log.w("MyLogTag", "doHandleRsiInfo: 发出警告！！！");
+        }
     }
     /**
      * @name doHandleTestMessage

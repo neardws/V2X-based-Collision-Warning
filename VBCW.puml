@@ -180,7 +180,7 @@ class com.linmu.collision_warning_system.services.BaiduLocationService.LocationL
 class com.linmu.collision_warning_system.utils.PropertiesUtil {
 + {static} Properties getProperties(Context,String)
 }
-class com.linmu.collision_warning_system.fragment.CommunicationFragment {
+class com.linmu.collision_warning_system.fragment.LogFragment {
 - EditText inputEditText
 - CommunicationService communicationService
 + {static} CommunicationFragment newInstance()
@@ -211,5 +211,5 @@ androidx.fragment.app.FragmentActivity <|-- com.linmu.collision_warning_system.M
 com.linmu.collision_warning_system.Application <|-- com.linmu.collision_warning_system.Application
 com.linmu.collision_warning_system.services.BaiduLocationService +.. com.linmu.collision_warning_system.services.BaiduLocationService.LocationListener
 com.linmu.collision_warning_system.services.BDAbstractLocationListener <|-- com.linmu.collision_warning_system.services.BaiduLocationService.LocationListener
-androidx.fragment.app.Fragment <|-- com.linmu.collision_warning_system.fragment.CommunicationFragment
+androidx.fragment.app.Fragment <|-- com.linmu.collision_warning_system.fragment.LogFragment
 @enduml

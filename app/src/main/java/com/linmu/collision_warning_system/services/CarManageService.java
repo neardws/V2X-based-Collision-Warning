@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.baidu.mapapi.model.LatLng;
 import com.linmu.collision_warning_system.Entry.Car;
+import com.linmu.collision_warning_system.Entry.Coordinate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,16 +13,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CarManageService {
     private static CarManageService INSTANCE;
-    private static String carSelfId;
-    private static Car carSelf = null;
-    public static void setCarSelfId(String carId) {
-        if(carSelfId != null) {
+    private static String thisCarId;
+    private static Car thisCar = null;
+    public static void setThisCarId(String carId) {
+        if(thisCarId != null) {
             return;
         }
-        carSelfId = carId;
+        thisCarId = carId;
     }
-    public static Car getCarSelf() {
-        return carSelf;
+    public static Car getThisCar() {
+        return thisCar;
     }
 
     public static CarManageService getInstance() {
@@ -31,10 +32,12 @@ public class CarManageService {
         return INSTANCE;
     }
 
-    private final ConcurrentHashMap<String,Car> carMap;
+    private final ConcurrentHashMap<String, Car> carMap;
+    private final ConcurrentHashMap<String, List<Coordinate>> predictListMap;
 
     public CarManageService() {
         carMap = new ConcurrentHashMap<>();
+        predictListMap = new ConcurrentHashMap<>();
     }
 
     public List<Car> getCarList() {
@@ -43,6 +46,14 @@ public class CarManageService {
 
     public int getCarCount() {
         return carMap.size();
+    }
+
+    public List<Coordinate> getPredictList(String obuId) {
+        return predictListMap.get(obuId);
+    }
+
+    public void setPredictList(String obuId, List<Coordinate> predictList) {
+        predictListMap.put(obuId,predictList);
     }
 
     /**
@@ -61,27 +72,28 @@ public class CarManageService {
         }
     }
 
-    public void addCarInfo(@NonNull String obuId, LatLng newLatlng, float newSpeed, float newDirection) {
-        if(obuId.equals(carSelfId)) {
-            addSelfCarInfo(obuId, newLatlng, newSpeed, newDirection);
+    public void addCarInfo(@NonNull String obuId, LatLng newLatlng, double altitude, float newSpeed, float newDirection) {
+        if(obuId.equals(thisCarId)) {
+            addSelfCarInfo(obuId, altitude, newLatlng, newSpeed, newDirection);
         }
         else {
-            addOthersCarInfo(obuId, newLatlng, newSpeed, newDirection);
+            addOthersCarInfo(obuId, altitude, newLatlng, newSpeed, newDirection);
         }
+        WarningService.getInstance().checkCollision();
     }
-    private void addSelfCarInfo(String obuId, LatLng newLatlng, float newSpeed, float newDirection) {
-        if(carSelf == null) {
-            carSelf = new Car(obuId, newLatlng, newSpeed, newDirection);
+    private void addSelfCarInfo(String obuId, double altitude, LatLng newLatlng, float newSpeed, float newDirection) {
+        if(thisCar == null) {
+            thisCar = new Car(obuId, altitude, newLatlng, newSpeed, newDirection);
         }
-        carSelf.addCarInfo(newLatlng, newSpeed, newDirection);
-        carSelf.keepLife();
+        thisCar.addCarInfo(newLatlng, altitude, newSpeed, newDirection);
+        thisCar.keepLife();
     }
-    private void addOthersCarInfo(String obuId, LatLng newLatlng, float newSpeed, float newDirection) {
+    private void addOthersCarInfo(String obuId, double altitude, LatLng newLatlng, float newSpeed, float newDirection) {
         Car car = carMap.get(obuId);
         if(car == null) {
-            car = new Car(obuId, newLatlng, newSpeed, newDirection);
+            car = new Car(obuId, altitude, newLatlng, newSpeed, newDirection);
         }
-        car.addCarInfo(newLatlng, newSpeed, newDirection);
+        car.addCarInfo(newLatlng, altitude, newSpeed, newDirection);
         car.keepLife();
         carMap.put(obuId,car);
     }

@@ -24,7 +24,9 @@ import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.Polyline;
 import com.baidu.mapapi.map.PolylineOptions;
 import com.baidu.mapapi.model.LatLng;
+import com.baidu.mapapi.utils.CoordinateConverter;
 import com.linmu.collision_warning_system.Entry.Car;
+import com.linmu.collision_warning_system.Entry.Coordinate;
 import com.linmu.collision_warning_system.R;
 import com.linmu.collision_warning_system.services.CarManageService;
 
@@ -45,7 +47,9 @@ public class MapFragment extends Fragment {
     private HashMap<String,Polyline> polylineHashMap;
     private HashMap<String, Marker> markerHashMap;
     private final BitmapDescriptor mBitmapCar = BitmapDescriptorFactory.fromResource(R.drawable.vehicle_xhdpi);
+    private final BitmapDescriptor mPredictPoint = BitmapDescriptorFactory.fromResource(R.drawable.predict);
     private final BitmapDescriptor mGreenTexture = BitmapDescriptorFactory.fromAsset("Icon_road_green_arrow.png");
+
 
     public MapFragment() {
         // Required empty public constructor
@@ -63,6 +67,7 @@ public class MapFragment extends Fragment {
         polylineHashMap = new HashMap<>();
         markerHashMap = new HashMap<>();
         getParentFragmentManager().setFragmentResultListener("NcsLocationForMap", this, this::doHandleNcsLocation);
+        getParentFragmentManager().setFragmentResultListener("predict", this, this::doHandlePredict);
     }
 
     @Override
@@ -131,8 +136,14 @@ public class MapFragment extends Fragment {
         }
         int type = result.getInt("type");
         if(type == 1) {
-            Car carSelf = CarManageService.getCarSelf();
-            LatLng latLng = carSelf.getLatLng();
+            Car carSelf = CarManageService.getThisCar();
+            // 将坐标由 WGS84坐标系 转换为 BD09LL坐标系
+            LatLng latLng = new LatLng(carSelf.getLatLng().latitude,carSelf.getLatLng().longitude);
+            CoordinateConverter coordinateConverter = new CoordinateConverter()
+                    .from(CoordinateConverter.CoordType.GPS)
+                    .coord(latLng);
+            latLng = coordinateConverter.convert();
+            // 更新位置
             MyLocationData locationData = new MyLocationData.Builder()
                     .direction(carSelf.getDirection())
                     .latitude(latLng.latitude)
@@ -155,6 +166,33 @@ public class MapFragment extends Fragment {
             Log.e("MyLogTag", "doHandleNcsLocation: type 错误无法解析");
         }
     }
+
+    private void doHandlePredict(String requestKey,Bundle result) {
+        CarManageService carManageService = CarManageService.getInstance();
+        Car thisCar = CarManageService.getThisCar();
+        List<Coordinate> thisCarPredictCoordinateList = carManageService.getPredictList(thisCar.getCarId());
+        for(int i=0;i<thisCarPredictCoordinateList.size();i++) {
+            LatLng thisCarPredictLatLng = Coordinate.xyz2BLH(thisCarPredictCoordinateList.get(i));
+            CoordinateConverter coordinateConverter = new CoordinateConverter()
+                    .from(CoordinateConverter.CoordType.GPS)
+                    .coord(thisCarPredictLatLng);
+            thisCarPredictLatLng = coordinateConverter.convert();
+            Marker marker = markerHashMap.get(thisCar.getCarId()+"_predict_"+i);
+            if(marker == null) {
+                MarkerOptions markerOptions = new MarkerOptions()
+                        .position(thisCarPredictLatLng)
+                        .anchor(0.5f,0.5f)
+                        .icon(mPredictPoint)
+                        .alpha(1.0f-0.1f*i)
+                        .scaleX(0.5f)
+                        .scaleY(0.5f);
+                marker = (Marker) mBaiduMap.addOverlay(markerOptions);
+            }
+            marker.setPosition(thisCarPredictLatLng);
+            markerHashMap.put(thisCar.getCarId()+"_predict_"+i,marker);
+        }
+    }
+
     private Marker initMarker(@NonNull Car car) {
         MarkerOptions markerOptions = new MarkerOptions()
                 .position(car.getLatLng())
@@ -171,7 +209,12 @@ public class MapFragment extends Fragment {
         if(marker == null) {
             marker = initMarker(car);
         }
-        marker.setPosition(car.getLatLng());
+        LatLng latLng = new LatLng(car.getLatLng().latitude,car.getLatLng().longitude);
+        CoordinateConverter coordinateConverter = new CoordinateConverter()
+                .from(CoordinateConverter.CoordType.GPS)
+                .coord(latLng);
+        latLng = coordinateConverter.convert();
+        marker.setPosition(latLng);
         marker.setRotate(car.getDirection());
     }
     /**
@@ -180,6 +223,7 @@ public class MapFragment extends Fragment {
     private Polyline initPolyLine(@NonNull Car car) {
         // 初始化需要至少两个点数据
         List<LatLng> polylineList = new ArrayList<>(car.getLatLngDeque());
+        polylineList = convertLatLng(polylineList);
         // 绘制纹理PolyLine
         PolylineOptions polylineOptions =
                 new PolylineOptions().points(polylineList)
@@ -196,11 +240,22 @@ public class MapFragment extends Fragment {
      */
     private void drawUpdatePolyLine(@NonNull Car car) {
         List<LatLng> polylineList = new ArrayList<>(car.getLatLngDeque());
+        polylineList = convertLatLng(polylineList);
         Collections.reverse(polylineList);
         Polyline polyline = polylineHashMap.get(car.getCarId());
         if(polyline == null) {
             polyline = initPolyLine(car);
         }
         polyline.setPoints(polylineList);
+    }
+    private List<LatLng> convertLatLng(List<LatLng> list) {
+        CoordinateConverter coordinateConverter = new CoordinateConverter()
+                .from(CoordinateConverter.CoordType.GPS);
+        List<LatLng> newList = new ArrayList<>();
+        for(LatLng latLng:list) {
+            LatLng newLatLng = coordinateConverter.coord(latLng).convert();
+            newList.add(newLatLng);
+        }
+        return newList;
     }
 }

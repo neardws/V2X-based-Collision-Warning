@@ -9,16 +9,22 @@ public class Car {
     private final String carId;
     private int life;
     LatLng latLng;
+    private double altitude;
     private float speed;
+    private float speed_last;
     private float direction;
+    private float direction_last;
     private final ConcurrentLinkedDeque<LatLng> latLngDeque;
 
-    public Car(String carId, LatLng latLng, float speed, float direction) {
+    public Car(String carId, double altitude, LatLng latLng, float speed, float direction) {
         this.carId = carId;
         this.life = 100;
         this.latLng = latLng;
+        this.altitude = altitude;
         this.speed = speed;
+        this.speed_last = speed;
         this.direction = direction;
+        this.direction_last = direction;
         this.latLngDeque = new ConcurrentLinkedDeque<>();
         // 添加初始化数据
         this.latLngDeque.addFirst(this.latLng);
@@ -32,6 +38,10 @@ public class Car {
         return latLng;
     }
 
+    public double getAltitude() {
+        return altitude;
+    }
+
     public float getSpeed() {
         return speed;
     }
@@ -42,6 +52,15 @@ public class Car {
     public int getLife() {
         return life;
     }
+
+    public float getSpeed_last() {
+        return speed_last;
+    }
+
+    public float getDirection_last() {
+        return direction_last;
+    }
+
     public void keepLife() {
         this.life = 100;
     }
@@ -53,9 +72,12 @@ public class Car {
         return latLngDeque;
     }
 
-    public void addCarInfo(LatLng latLng, float speed, float direction) {
+    public void addCarInfo(LatLng latLng, double altitude, float speed, float direction) {
         this.latLng = latLng;
+        this.altitude = altitude;
+        this.speed_last = this.speed;
         this.speed = speed;
+        this.direction_last = this.direction;
         this.direction = direction;
         if(this.latLngDeque.size() >= 10) {
             this.latLngDeque.pollLast();

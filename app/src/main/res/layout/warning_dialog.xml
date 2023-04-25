@@ -5,7 +5,7 @@
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/warn"
+        android:src="@drawable/warn_001"
         android:contentDescription="车辆碰撞警告图" />
 
 </LinearLayout>

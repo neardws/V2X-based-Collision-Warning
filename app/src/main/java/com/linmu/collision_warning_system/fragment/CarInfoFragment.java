@@ -58,12 +58,12 @@ public class CarInfoFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         View rootView = requireView();
-        snakeView = (SnakeView) rootView.findViewById(R.id.snake);
+        snakeView = rootView.findViewById(R.id.snake);
         snakeView.setMinValue(0.0f);
         snakeView.setMaxValue(200.0f);
     }
 
-    private void doHandleNcsLocation(String requestKey,Bundle result) {
+    private void doHandleNcsLocation(String requestKey, @NonNull Bundle result) {
         int type = result.getInt("type");
         if(type != 1) {
             Log.e("MyLogTag", "doHandleNcsLocation: 类型错误");
@@ -73,9 +73,9 @@ public class CarInfoFragment extends Fragment {
         View rootView = requireView();
 
         TextView obuIdValue = rootView.findViewById(R.id.obuIdValue);
-        obuIdValue.setText(CarManageService.getCarSelf().getCarId());
+        obuIdValue.setText(CarManageService.getThisCar().getCarId());
 
-        Car carSelf = CarManageService.getCarSelf();
+        Car carSelf = CarManageService.getThisCar();
 
         // 给速度曲线添加值
         snakeView.addValue(carSelf.getSpeed());

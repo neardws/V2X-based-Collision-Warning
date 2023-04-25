@@ -1,7 +1,6 @@
 package com.linmu.collision_warning_system.fragment;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,19 +20,19 @@ import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link CommunicationFragment#newInstance} factory method to
+ * Use the {@link LogFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class CommunicationFragment extends Fragment {
+public class LogFragment extends Fragment {
 
     private Long lastTime;
     private List<Long> delayList;
 
-    private CommunicationFragment() {
+    private LogFragment() {
         // Required empty public constructor
     }
-    public static CommunicationFragment newInstance() {
-        return new CommunicationFragment();
+    public static LogFragment newInstance() {
+        return new LogFragment();
     }
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,17 +86,20 @@ public class CommunicationFragment extends Fragment {
     private void doWarnButtonClick(View view) {
         FragmentManager fragmentManager = getParentFragmentManager();
         Bundle bundle = new Bundle();
-        bundle.putInt("warning",1);
+        bundle.putInt("warningType",1);
         fragmentManager.setFragmentResult("warning",bundle);
     }
     private void doHandleNcsLog(String requestKey, @NonNull Bundle result) {
         String res = result.getString("log");
-        // 更新接收消息页
-        TextView receiveTextView = this.requireView().findViewById(R.id.receiveText);
-        if(receiveTextView == null) {
-            Log.e("doHandleReceiveMessage", "receiveTextView 为空!");
-            return;
+        int type = result.getInt("type");
+        TextView textView;
+        if(type == 1) {
+            textView = this.requireView().findViewById(R.id.thisCarLogText);
         }
-        receiveTextView.setText(res);
+        else {
+            textView = this.requireView().findViewById(R.id.otherCarLogText);
+        }
+        // 更新接收消息页
+        textView.setText(res);
     }
 }
