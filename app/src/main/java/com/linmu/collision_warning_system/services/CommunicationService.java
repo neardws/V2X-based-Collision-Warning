@@ -10,11 +10,12 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentManager;
 
-import com.linmu.collision_warning_system.services.udp.UdpReceiver;
-import com.linmu.collision_warning_system.services.udp.UdpSender;
+import com.linmu.collision_warning_system.utils.udp.UdpReceiver;
+import com.linmu.collision_warning_system.utils.udp.UdpSender;
 import com.linmu.collision_warning_system.utils.IpUtil;
 import com.linmu.collision_warning_system.utils.PropertiesUtil;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class CommunicationService {
         String targetPort = PropertiesUtil.getValue("send.targetPort");
         INSTANCE.sender = new UdpSender(targetIp,targetPort);
         // 接受消息的 handler，具体处理放在 doHandleReceiveMessage
-        Handler receiverHandler = new Handler(Looper.getMainLooper(), NcsLocationService.getInstance()::doHandleReceiveMessage);
+        Handler receiverHandler = new Handler(Looper.getMainLooper(), NcsService.getInstance()::doHandleReceiveMessage);
         INSTANCE.receiver.setHandler(receiverHandler);
     }
     /** 页面管理对象 **/
@@ -128,6 +129,25 @@ public class CommunicationService {
                 // 接收消息
                 receiver.receiveOnce(port);
             } catch (IOException | RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+    /**
+     * @name testWifiDelay
+     * @description 测试WIFI时延
+     * @param port 端口
+     * @param jsonObject 消息体
+     * @date 2023-05-03 19:04
+     */
+    public void testWifiDelay(int port, JSONObject jsonObject) {
+        mThreadPool.execute(() -> {
+            try {
+                // 发送消息
+                long sendTime = sender.send(port,jsonObject);
+                // 接收消息
+                receiver.receiveTest(port,sendTime);
+            } catch (IOException | RemoteException | JSONException e) {
                 throw new RuntimeException(e);
             }
         });

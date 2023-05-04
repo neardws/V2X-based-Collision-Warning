@@ -1,4 +1,4 @@
-package com.linmu.collision_warning_system.services.udp;
+package com.linmu.collision_warning_system.utils.udp;
 
 import android.util.Log;
 
@@ -32,7 +32,7 @@ public class UdpSender {
         this.targetPort = Integer.parseInt(targetPort);
     }
 
-    public void send(int port, @NonNull JSONObject jsonObject) throws IOException {
+    public long send(int port, @NonNull JSONObject jsonObject) throws IOException {
         // 将数据转化为byte[]
         byte[] buff = jsonObject.toString().getBytes(StandardCharsets.US_ASCII);//发送过来的数据的长度范围
         // 组装数据包(数据，偏移量，数据长度，目标IP地址，目标端口号)
@@ -40,8 +40,10 @@ public class UdpSender {
         // 若 port 为-1则选择自动获取随机空闲端口进行发送
         DatagramSocket sendSocket = port == -1 ? new DatagramSocket() : new DatagramSocket(port);
         sendSocket.send(packet);
+        long sendTime = System.currentTimeMillis();
         sendSocket.close();
-        Log.i("sendMessage",String.format("send:ip: %s port: %s json: %s",targetIp.getHostAddress(),port, jsonObject));
+//        Log.i("sendMessage",String.format("send:ip: %s port: %s json: %s",targetIp.getHostAddress(),port, jsonObject));
+        return sendTime;
     }
 
 }

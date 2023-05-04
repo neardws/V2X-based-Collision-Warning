@@ -7,12 +7,17 @@ import androidx.annotation.NonNull;
 import com.linmu.collision_warning_system.Entry.Car;
 import com.linmu.collision_warning_system.Entry.Coordinate;
 import com.linmu.collision_warning_system.Entry.Vector;
-import com.linmu.collision_warning_system.utils.CarCoordinateUtil;
+import com.linmu.collision_warning_system.utils.CoordinateUtil;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 
+import java.math.RoundingMode;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @version V1.0
@@ -38,28 +43,50 @@ public class WarningService {
     }
     private final CarManageService carManageService;
     private final CommunicationService communicationService;
-    private CarCoordinateUtil carCoordinateUtil;
+    private CoordinateUtil coordinateUtil;
+    private double warningValue;
+    private final HashMap<String,Long> warningCountMap;
+    private int count;
 
     private WarningService() {
         carManageService = CarManageService.getInstance();
         communicationService = CommunicationService.getInstance();
+        warningValue = 0.00004d;
+        warningCountMap = new HashMap<>();
+        count = 0;
     }
 
     public void checkCollision() {
+        count += 1;
+        if(count % 10 == 0) {
+            Iterator<Map.Entry<String,Long>> iterator;
+            for(iterator = warningCountMap.entrySet().iterator();iterator.hasNext();) {
+                Map.Entry<String,Long> item = iterator.next();
+                Long value = item.getValue();
+                if(value > 1) {
+                    item.setValue(value-1);
+                }
+                else {
+                    iterator.remove();
+                }
+            }
+            count = 0;
+        }
+
         // 获取本车
         Car thisCar = CarManageService.getThisCar();
         // 创建本车参考系工具类
-        carCoordinateUtil = new CarCoordinateUtil(thisCar);
+        coordinateUtil = new CoordinateUtil(thisCar);
         // 获取本车直角坐标系坐标
-        Coordinate thisCarCoordinate = carCoordinateUtil.getBase();
+        Coordinate thisCarCoordinate = coordinateUtil.getBase();
         // 计算车辆速度方向向量
-        Vector thisCarDirection = carCoordinateUtil.convertDirection(thisCar.getDirection());
+        Vector thisCarDirection = coordinateUtil.convertDirection(thisCar.getDirection());
         // 计算车辆上一次速度方向向量
-        Vector thisCarDirectionLast = carCoordinateUtil.convertDirection(thisCar.getDirection_last());
+        Vector thisCarDirectionLast = coordinateUtil.convertDirection(thisCar.getDirection_last());
         // 计算车辆速度向量
-        Vector thisCarSpeed = Vector.dotMultiply(thisCarDirection, convertSpeed(thisCar.getSpeed()));
+        Vector thisCarSpeed = Vector.dotMultiply(thisCarDirection, thisCar.getSpeed());
         // 计算车辆上一次速度向量
-        Vector thisCarSpeedLast = Vector.dotMultiply(thisCarDirectionLast,convertSpeed(thisCar.getSpeed_last()));
+        Vector thisCarSpeedLast = Vector.dotMultiply(thisCarDirectionLast,thisCar.getSpeed_last());
         // 计算车辆加速度(两次间隔为0.1s)
         Vector thisCarAcc = Vector.dotMultiply(Vector.sub(thisCarSpeed,thisCarSpeedLast),10.0d);
 
@@ -67,26 +94,43 @@ public class WarningService {
         List<Coordinate> thisCarPredictList = predict(thisCarCoordinate,thisCarSpeed,thisCarAcc);
         carManageService.setPredictList(thisCar.getCarId(),thisCarPredictList);
 
+
+        List<Double> distances = new ArrayList<>();
         List<Car> carList = carManageService.getCarList();
         for(Car otherCar:carList) {
             Coordinate otherCarCoordinate = Coordinate.createCoordinateFromBLH(otherCar.getLatLng().latitude,otherCar.getLatLng().longitude,otherCar.getAltitude());
             // 计算车辆速度方向向量
-            Vector otherCarDirection = carCoordinateUtil.convertDirection(otherCar.getDirection());
+            Vector otherCarDirection = coordinateUtil.convertDirection(otherCar.getDirection());
             // 计算车辆上一次速度方向向量
-            Vector otherCarDirectionLast = carCoordinateUtil.convertDirection(otherCar.getDirection_last());
+            Vector otherCarDirectionLast = coordinateUtil.convertDirection(otherCar.getDirection_last());
             // 计算车辆速度向量
-            Vector otherCarSpeed = Vector.dotMultiply(otherCarDirection, convertSpeed(otherCar.getSpeed()));
+            Vector otherCarSpeed = Vector.dotMultiply(otherCarDirection, otherCar.getSpeed());
             // 计算车辆上一次速度向量
-            Vector otherCarSpeedLast = Vector.dotMultiply(otherCarDirectionLast,convertSpeed(otherCar.getSpeed_last()));
+            Vector otherCarSpeedLast = Vector.dotMultiply(otherCarDirectionLast,otherCar.getSpeed_last());
             // 计算车辆加速度
             Vector otherCarAcc = Vector.dotMultiply(Vector.sub(otherCarSpeed,otherCarSpeedLast),10.0d);
+            distances.add(coordinateUtil.countDistance(thisCarCoordinate,otherCarCoordinate));
             // 预测位置
             List<Coordinate> otherCarPredictList = predict(otherCarCoordinate,otherCarSpeed,otherCarAcc);
             carManageService.setPredictList(otherCar.getCarId(),otherCarPredictList);
 
-            checkPredictCollision(thisCarPredictList,otherCarPredictList);
+            checkPredictCollision(thisCarPredictList,otherCarPredictList,otherCar.getCarId());
         }
         communicationService.passMessageToUI("predict",new Bundle());
+        NumberFormat nf_dis = NumberFormat.getNumberInstance();
+        nf_dis.setMaximumFractionDigits(2);
+        nf_dis.setRoundingMode(RoundingMode.UP);
+        Bundle logBundle = new Bundle();
+        logBundle.putInt("type",3);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
+        for(Double d:distances) {
+            stringBuilder.append(nf_dis.format(d));
+            stringBuilder.append(",");
+        }
+        stringBuilder.append("]");
+        logBundle.putString("log",stringBuilder.toString());
+        communicationService.passMessageToUI("NcsLog", logBundle);
     }
     /**
      * @name checkPredictCollision
@@ -95,16 +139,33 @@ public class WarningService {
      * @param otherCarPredictList 他车预测列表
      * @date 2023-04-17 19:27
      */
-    private void checkPredictCollision(@NonNull List<Coordinate> thisCarPredictList, @NonNull List<Coordinate> otherCarPredictList) {
+    private void checkPredictCollision(@NonNull List<Coordinate> thisCarPredictList, @NonNull List<Coordinate> otherCarPredictList,String obuId) {
         for(int i=0;i<thisCarPredictList.size();i++) {
             Coordinate thisCarPredict = thisCarPredictList.get(i);
             Coordinate otherCarPredict = otherCarPredictList.get(i);
 
+            if(carGaussianCdf(thisCarPredict,otherCarPredict,10.0d) >= warningValue) {
+                Long warningCount = warningCountMap.get(obuId);
+                if(warningCount == null) {
+                    warningCount = 0L;
+                }
+                warningCount += 1;
 
-            if(carGaussianCdf(thisCarPredict,otherCarPredict,1.0d) >= 0.01d) {
-                Bundle bundle = new Bundle();
-                bundle.putInt("warningType",i);
-                communicationService.passMessageToUI("warning",bundle);
+                if(warningCount >= 3) {
+                    warningCount = 0L;
+                    int warningType;
+                    if(i <= 2) {
+                        warningType = 1;
+                    }
+                    else {
+                        warningType = 2;
+                    }
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("warningType",warningType);
+                    communicationService.passMessageToUI("warning",bundle);
+                }
+                warningCountMap.put(obuId,warningCount);
+                return;
             }
         }
     }
@@ -123,22 +184,12 @@ public class WarningService {
         List<Coordinate> predictList = new ArrayList<>();
         for (int i = 1; i < 7; i++) {
             // 计算车辆预测位置
-            predictCoordinate = carCoordinateUtil.move(coordinate, speed,acc, i);
+            predictCoordinate = coordinateUtil.move(coordinate, speed,acc, i);
             predictList.add(predictCoordinate);
         }
         return predictList;
     }
 
-    /**
-     * @name 速度单位转换
-     * @description 将速度由 km/h 转化为 m/s
-     * @param speed 单位为 km/h 的速度。
-     * @return double 单位为 m/s 的速度
-     * @date 2023-04-10 17:57
-     */
-    private double convertSpeed(double speed) {
-        return speed / 3.6d;
-    }
     /**
      * @name carGaussianCdf
      * @description 计算车辆高斯分布三维累积密度概率
@@ -163,5 +214,13 @@ public class WarningService {
         double cdf1 = normal.cumulativeProbability(x1);
         double cdf2 = normal.cumulativeProbability(x2);
         return cdf2 - cdf1;
+    }
+
+    public double getWarningValue() {
+        return warningValue;
+    }
+
+    public void setWarningValue(double warningValue) {
+        this.warningValue = warningValue;
     }
 }

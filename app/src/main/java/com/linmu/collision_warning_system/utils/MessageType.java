@@ -12,7 +12,7 @@ import androidx.annotation.Nullable;
 public enum MessageType {
     Once("receive.once.port","单次消息"),
     Push("receive.push.port","推送消息"),
-    Log("log.port","日志消息");
+    Log("log.port","测试消息");
     private final int port;
     private final String description;
     MessageType(String type, String description) {

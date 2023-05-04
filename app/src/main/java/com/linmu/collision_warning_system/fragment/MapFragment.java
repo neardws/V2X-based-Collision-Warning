@@ -49,6 +49,7 @@ public class MapFragment extends Fragment {
     private final BitmapDescriptor mBitmapCar = BitmapDescriptorFactory.fromResource(R.drawable.vehicle_xhdpi);
     private final BitmapDescriptor mPredictPoint = BitmapDescriptorFactory.fromResource(R.drawable.predict);
     private final BitmapDescriptor mGreenTexture = BitmapDescriptorFactory.fromAsset("Icon_road_green_arrow.png");
+    private CarManageService carManageService;
 
 
     public MapFragment() {
@@ -101,7 +102,7 @@ public class MapFragment extends Fragment {
                 MyLocationConfiguration.LocationMode.FOLLOWING,
                 true,
                 mBitmapCar);
-
+        carManageService = CarManageService.getInstance();
         mBaiduMap.setMyLocationConfiguration(myLocationConfiguration);
         this.mapView.onResume();
     }
@@ -153,7 +154,7 @@ public class MapFragment extends Fragment {
             drawUpdatePolyLine(carSelf);
         }
         else if(type == 2) {
-            List<Car> carList = CarManageService.getInstance().getCarList();
+            List<Car> carList = carManageService.getCarList();
             for(Car car:carList) {
                 if(car.getLife() < 8) {
                     continue;
@@ -168,7 +169,6 @@ public class MapFragment extends Fragment {
     }
 
     private void doHandlePredict(String requestKey,Bundle result) {
-        CarManageService carManageService = CarManageService.getInstance();
         Car thisCar = CarManageService.getThisCar();
         List<Coordinate> thisCarPredictCoordinateList = carManageService.getPredictList(thisCar.getCarId());
         for(int i=0;i<thisCarPredictCoordinateList.size();i++) {
@@ -222,7 +222,7 @@ public class MapFragment extends Fragment {
      */
     private Polyline initPolyLine(@NonNull Car car) {
         // 初始化需要至少两个点数据
-        List<LatLng> polylineList = new ArrayList<>(car.getLatLngDeque());
+        List<LatLng> polylineList = new ArrayList<>(carManageService.getLatLngDeque(car.getCarId()));
         polylineList = convertLatLng(polylineList);
         // 绘制纹理PolyLine
         PolylineOptions polylineOptions =
@@ -239,7 +239,7 @@ public class MapFragment extends Fragment {
      * 更新&绘制路径
      */
     private void drawUpdatePolyLine(@NonNull Car car) {
-        List<LatLng> polylineList = new ArrayList<>(car.getLatLngDeque());
+        List<LatLng> polylineList = new ArrayList<>(carManageService.getLatLngDeque(car.getCarId()));
         polylineList = convertLatLng(polylineList);
         Collections.reverse(polylineList);
         Polyline polyline = polylineHashMap.get(car.getCarId());
@@ -248,7 +248,8 @@ public class MapFragment extends Fragment {
         }
         polyline.setPoints(polylineList);
     }
-    private List<LatLng> convertLatLng(List<LatLng> list) {
+    @NonNull
+    private List<LatLng> convertLatLng(@NonNull List<LatLng> list) {
         CoordinateConverter coordinateConverter = new CoordinateConverter()
                 .from(CoordinateConverter.CoordType.GPS);
         List<LatLng> newList = new ArrayList<>();

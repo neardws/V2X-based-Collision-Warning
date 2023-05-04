@@ -7,7 +7,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.baidu.mapapi.model.LatLng;
-import com.baidu.mapapi.utils.CoordinateConverter;
 import com.linmu.collision_warning_system.utils.IpUtil;
 import com.linmu.collision_warning_system.utils.MessageType;
 import com.linmu.collision_warning_system.utils.NcsTag;
@@ -28,18 +27,18 @@ import java.util.concurrent.TimeUnit;
  * @description 与NCS相关的服务，主要包括发起请求和消息处理两个部分。
  * @date 2023-04-05 14:02
 */
-public class NcsLocationService {
+public class NcsService {
     /** 类静态实例 **/
-    private static NcsLocationService INSTANCE;
+    private static NcsService INSTANCE;
     /**
      * @name 获取NCS定位服务实例
      * @description 懒汉式获取类的单例
      * @return NcsLocationService 单例对象
      * @date 2023-04-05 14:04
      */
-    public static NcsLocationService getInstance() {
+    public static NcsService getInstance() {
         if(INSTANCE == null) {
-            INSTANCE = new NcsLocationService();
+            INSTANCE = new NcsService();
         }
         return INSTANCE;
     }
@@ -50,7 +49,7 @@ public class NcsLocationService {
     /**
      * @description 私有构造函数
      */
-    private NcsLocationService() {
+    private NcsService() {
         carManageService = CarManageService.getInstance();
         communicationService = CommunicationService.getInstance();
     }
@@ -94,15 +93,16 @@ public class NcsLocationService {
         }
         communicationService.sentAndReceive(MessageType.Once.getPort(), loginNcs);
     }
-    public void sentAskNcsState() {
-        JSONObject askNcsState;
+
+    public void testWifiDelay() {
+        JSONObject testJsonObject;
         try {
-            askNcsState = new JSONObject();
-            askNcsState.put("tag", NcsTag.State.getTag());
+            testJsonObject = new JSONObject();
+            testJsonObject.put("tag", NcsTag.State.getTag());
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
-        communicationService.sentAndReceive(MessageType.Log.getPort(), askNcsState);
+        communicationService.testWifiDelay(MessageType.Log.getPort(), testJsonObject);
     }
 
     /**
@@ -277,7 +277,6 @@ public class NcsLocationService {
         // 发送消息给log页面显示
         Bundle logBundle = new Bundle();
 
-
         // 解析数据包
         int tag;
         try {
@@ -357,6 +356,7 @@ public class NcsLocationService {
         double longitude = carData.getDouble("lon");
         double altitude = carData.getDouble("ele");
         double speed = carData.getDouble("spd");
+        speed = convertSpeed(speed);
         double direction = carData.getDouble("hea");
         // 坐标转换
         LatLng latLng = new LatLng(latitude,longitude);
@@ -381,20 +381,30 @@ public class NcsLocationService {
      */
     private boolean doHandleTestMessage(@NonNull Message msg) {
         JSONObject jsonObject = (JSONObject) msg.obj;
-        Log.w("MyLogTag", String.format("doHandleTestMessage: %s",jsonObject));
-        long time;
+        Bundle testBundle = new Bundle();
         try {
-            JSONObject carData = jsonObject.getJSONObject("data");
-            /* 用于测试时延 */
-            time = carData.getLong("current_time");
+            long sendTime = jsonObject.getLong("sendTime");
+            long receiveTime = jsonObject.getLong("receiveTime");
+            testBundle.putLong("sendTime",sendTime);
+            testBundle.putLong("receiveTime",receiveTime);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
         // 发送消息给log页面显示
-        Bundle timeBundle = new Bundle();
-        timeBundle.putLong("time",time);
-        communicationService.passMessageToUI("NcsTime",timeBundle);
+        communicationService.passMessageToUI("NcsTime",testBundle);
         return true;
+    }
+
+
+    /**
+     * @name 速度单位转换
+     * @description 将速度由 km/h 转化为 m/s
+     * @param speed 单位为 km/h 的速度。
+     * @return double 单位为 m/s 的速度
+     * @date 2023-04-10 17:57
+     */
+    private double convertSpeed(double speed) {
+        return speed / 3.6d;
     }
 
 }

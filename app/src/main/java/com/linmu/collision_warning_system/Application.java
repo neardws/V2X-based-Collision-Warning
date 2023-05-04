@@ -10,24 +10,9 @@ import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.common.BaiduMapSDKException;
 
 public class Application extends android.app.Application {
-
-    @SuppressLint("StaticFieldLeak")
-    private static Context context; // TODO 临时写法
-    public Vibrator mVibrator;
-
-    /**
-     * 获取全局上下文*/
-    public static Context getContext() {
-        return context;
-    }
-
-
     @Override
     public void onCreate() {
         super.onCreate();
-        context = getApplicationContext();
-
-        mVibrator =(Vibrator)getApplicationContext().getSystemService(Service.VIBRATOR_SERVICE);
 
         // 是否同意隐私政策，默认为false
         SDKInitializer.setAgreePrivacy(getApplicationContext(), true);

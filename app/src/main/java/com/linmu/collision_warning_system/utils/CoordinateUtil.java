@@ -13,13 +13,13 @@ import com.linmu.collision_warning_system.Entry.Vector;
  * @description 车辆直角坐标系相关服务
  * @date 2023-04-09 17:15
  **/
-public class CarCoordinateUtil {
+public class CoordinateUtil {
     /** 本车位置 **/
     private final Coordinate base;
     /** 用于加速计算的中间变量 **/
     private final double dxy,dxyz,z_power;
 
-    public CarCoordinateUtil(@NonNull Car car) {
+    public CoordinateUtil(@NonNull Car car) {
         this.base = Coordinate.createCoordinateFromBLH(car.getLatLng().latitude,car.getLatLng().longitude,car.getAltitude());
         dxy = (base.x * base.x) + (base.y * base.y);
         z_power = base.z * base.z;

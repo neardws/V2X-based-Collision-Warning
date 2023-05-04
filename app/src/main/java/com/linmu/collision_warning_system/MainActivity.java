@@ -22,7 +22,7 @@ import com.linmu.collision_warning_system.fragment.MapFragment;
 import com.linmu.collision_warning_system.fragment.MyFragmentAdapter;
 import com.linmu.collision_warning_system.fragment.OfflineMapFragment;
 import com.linmu.collision_warning_system.services.CommunicationService;
-import com.linmu.collision_warning_system.services.NcsLocationService;
+import com.linmu.collision_warning_system.services.NcsService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +44,7 @@ public class MainActivity extends FragmentActivity {
     /** 通讯服务对象 **/
     private CommunicationService communicationService;
     /** NCS服务对象 **/
-    private NcsLocationService ncsLocationService;
+    private NcsService ncsLocationService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +67,7 @@ public class MainActivity extends FragmentActivity {
         communicationService = CommunicationService.getInstance();
 
         // 初始化 NCS 定位服务
-        ncsLocationService = NcsLocationService.getInstance();
+        ncsLocationService = NcsService.getInstance();
 
         ncsLocationService.checkNcsState();
     }
@@ -75,12 +75,10 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onResume() {
         super.onResume();
-//        accelerationService.registerSensor();
     }
     @Override
     protected void onPause() {
         super.onPause();
-//        accelerationService.unregisterSensor();
     }
     @Override
     protected void onDestroy() {
@@ -124,7 +122,7 @@ public class MainActivity extends FragmentActivity {
     private void doHandleWarning(String requestKey, @NonNull Bundle result) {
         int type = result.getInt("warningType");
         Dialog dialog;
-        if(type <= 3) {
+        if(type == 2) {
             dialog = new Dialog(this, R.style.warning_strong_dialog_style);
         }
         else {
@@ -139,7 +137,7 @@ public class MainActivity extends FragmentActivity {
                 dialog.dismiss();
                 timer.cancel();
             }
-        },2000);
+        },1000);
     }
 
     /**

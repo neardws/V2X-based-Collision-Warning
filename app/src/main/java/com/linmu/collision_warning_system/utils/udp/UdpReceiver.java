@@ -1,4 +1,4 @@
-package com.linmu.collision_warning_system.services.udp;
+package com.linmu.collision_warning_system.utils.udp;
 
 import android.os.Handler;
 import android.os.Message;
@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 
 /**
  * 接受udp消息的线程类
@@ -41,21 +42,22 @@ public class UdpReceiver {
         byte[] buff = new byte[BUFF_SIZE];//发送过来的数据的长度范围
         receivePacket = new DatagramPacket(buff, buff.length);
         socket.receive(receivePacket);
-        // 获取对方的IP地址
-        InetAddress ipAddress = receivePacket.getAddress();
-        String hostAddress = ipAddress.getHostAddress();
+//        // 获取对方的IP地址
+//        InetAddress ipAddress = receivePacket.getAddress();
+//        String hostAddress = ipAddress.getHostAddress();
         // 获取到数据
         String msg = new String(receivePacket.getData(),0,receivePacket.getLength());
         // 将数据解析为 JSONObject
         try {
             jsonObject = new JSONObject(msg);
-            jsonObject.put("senderIp",hostAddress);
+            jsonObject.put("receiveTime",System.currentTimeMillis());
+//            jsonObject.put("senderIp",hostAddress);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
         return jsonObject;
     }
-    public void receiveOnce(int port) throws RemoteException, IOException {
+    public void receiveOnce(int port) throws IOException, RemoteException {
         // 创建通信
         DatagramSocket socket = new DatagramSocket(port);
         JSONObject jsonObject = receive(socket);
@@ -89,6 +91,24 @@ public class UdpReceiver {
             mServer.send(receivedMessage);
         }
         socket.close();
+    }
+
+    public void receiveTest(int port, long sendTime) throws IOException, RemoteException, JSONException {
+        // 创建通信
+        DatagramSocket socket = new DatagramSocket(port);
+        JSONObject jsonObject = receive(socket);
+        socket.close();
+
+        if(mServer == null) {
+            Log.e("receiveOnce", "Message Server 还没有初始化");
+            return;
+        }
+        // 将消息发送给主线程
+        Message message = new Message();
+        message.what = port;
+        jsonObject.put("sendTime",sendTime);
+        message.obj = jsonObject;
+        mServer.send(message);
     }
 
     public void stopReceive(){

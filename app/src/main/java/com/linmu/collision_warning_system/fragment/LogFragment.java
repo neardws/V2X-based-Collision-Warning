@@ -1,10 +1,13 @@
 package com.linmu.collision_warning_system.fragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,10 +16,15 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.linmu.collision_warning_system.R;
-import com.linmu.collision_warning_system.services.NcsLocationService;
+import com.linmu.collision_warning_system.services.NcsService;
+import com.linmu.collision_warning_system.services.WarningService;
+import com.linmu.collision_warning_system.utils.PropertiesUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -24,9 +32,8 @@ import java.util.List;
  * create an instance of this fragment.
  */
 public class LogFragment extends Fragment {
-
-    private Long lastTime;
     private List<Long> delayList;
+    private int testCount;
 
     private LogFragment() {
         // Required empty public constructor
@@ -40,54 +47,83 @@ public class LogFragment extends Fragment {
         FragmentManager fragmentManager = getParentFragmentManager();
         fragmentManager.setFragmentResultListener("NcsLog", this, this::doHandleNcsLog);
         fragmentManager.setFragmentResultListener("NcsTime", this, this::doHandleNcsTime);
-        lastTime = 0L;
         delayList = new ArrayList<>();
     }
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_communication, container, false);
+        View view = inflater.inflate(R.layout.fragment_communication, container, false);
+
+        TextView valueTest = view.findViewById(R.id.valueText);
+        valueTest.setText(String.format("%s", WarningService.getInstance().getWarningValue()));
+
+        EditText inputTest = view.findViewById(R.id.inputTest);
+
+        inputTest.setOnEditorActionListener((v, actionId, event) -> {
+            if(actionId == EditorInfo.IME_ACTION_DONE) {
+                String str = v.getText().toString();
+                double value = Double.parseDouble(str)/(Math.pow(10.0d,str.length()));
+                WarningService.getInstance().setWarningValue(value);
+                valueTest.setText(String.format("%s", value));
+                Log.w("MyLogTag", "onEditorAction: "+value);
+            }
+            return false;
+        });
+        return view;
     }
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Button sentButton = view.findViewById(R.id.sendButton);
-        Button warnButton = view.findViewById(R.id.warnButton);
         sentButton.setOnClickListener(this::doOnSendButtonClick);
-        warnButton.setOnClickListener(this::doWarnButtonClick);
     }
     private void doOnSendButtonClick(View view) {
-        NcsLocationService.getInstance().sentAskNcsState();
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        long period = Long.parseLong(PropertiesUtil.getValue("test.period"));
+        int testTime = Integer.parseInt(PropertiesUtil.getValue("test.num"));
+        scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
+            int countTime = testTime;
+            @Override
+            public void run() {
+                countTime -= 1;
+                if(countTime < 0) {
+                    scheduledExecutorService.shutdown();
+                    return;
+                }
+                NcsService.getInstance().testWifiDelay();
+            }
+        },0,period, TimeUnit.MILLISECONDS);
     }
 
     private void doHandleNcsTime(String requestKey, @NonNull Bundle result) {
-        long time = result.getLong("time");
-        if(lastTime == 0L) {
-            lastTime = time;
-            NcsLocationService.getInstance().sentAskNcsState();
-            return;
-        }
-        long delay = (time - lastTime)/2;
+        testCount += 1;
+        long sendTime = result.getLong("sendTime");
+        long receiveTime = result.getLong("receiveTime");
+        long delay = (receiveTime - sendTime)/2;
         delayList.add(delay);
-
 
         // 更新接收消息页
         TextView delayText = this.requireView().findViewById(R.id.delayText);
         StringBuilder stringBuilder = new StringBuilder();
         for(long delayData: delayList) {
             stringBuilder.append(delayData);
-            stringBuilder.append(" ");
+            stringBuilder.append(",");
         }
-        delayText.setText(stringBuilder.toString());
+        stringBuilder.append("\n");
+        stringBuilder.append("count: ");
+        stringBuilder.append(testCount);
+        stringBuilder.append(", mean: ");
+        double delay_mean = delayList.stream().mapToLong(Long::longValue).average().orElse(0.0d);
+        stringBuilder.append(delay_mean);
+        stringBuilder.append(", min: ");
+        long delay_min = delayList.stream().mapToLong(Long::longValue).min().orElse(0L);
+        stringBuilder.append(delay_min);
+        stringBuilder.append(", max: ");
+        long delay_max = delayList.stream().mapToLong(Long::longValue).max().orElse(0L);
+        stringBuilder.append(delay_max);
 
-        lastTime = 0L;
-    }
-    private void doWarnButtonClick(View view) {
-        FragmentManager fragmentManager = getParentFragmentManager();
-        Bundle bundle = new Bundle();
-        bundle.putInt("warningType",1);
-        fragmentManager.setFragmentResult("warning",bundle);
+        delayText.setText(stringBuilder.toString());
     }
     private void doHandleNcsLog(String requestKey, @NonNull Bundle result) {
         String res = result.getString("log");
@@ -96,10 +132,14 @@ public class LogFragment extends Fragment {
         if(type == 1) {
             textView = this.requireView().findViewById(R.id.thisCarLogText);
         }
-        else {
+        else if(type == 2) {
             textView = this.requireView().findViewById(R.id.otherCarLogText);
+        }
+        else {
+            textView = this.requireView().findViewById(R.id.distanceText);
         }
         // 更新接收消息页
         textView.setText(res);
     }
+
 }

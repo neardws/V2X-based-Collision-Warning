@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class CarManageService {
     private static CarManageService INSTANCE;
@@ -35,9 +36,12 @@ public class CarManageService {
     private final ConcurrentHashMap<String, Car> carMap;
     private final ConcurrentHashMap<String, List<Coordinate>> predictListMap;
 
+    private final ConcurrentHashMap<String, ConcurrentLinkedDeque<LatLng>> latLngDequeMap;
+
     public CarManageService() {
         carMap = new ConcurrentHashMap<>();
         predictListMap = new ConcurrentHashMap<>();
+        latLngDequeMap = new ConcurrentHashMap<>();
     }
 
     public List<Car> getCarList() {
@@ -49,11 +53,19 @@ public class CarManageService {
     }
 
     public List<Coordinate> getPredictList(String obuId) {
-        return predictListMap.get(obuId);
+        List<Coordinate> list = predictListMap.get(obuId);
+        if(list == null) {
+            list = new ArrayList<>();
+        }
+        return list;
     }
 
     public void setPredictList(String obuId, List<Coordinate> predictList) {
         predictListMap.put(obuId,predictList);
+    }
+
+    public ConcurrentLinkedDeque<LatLng> getLatLngDeque(String obuId) {
+        return latLngDequeMap.get(obuId);
     }
 
     /**
@@ -79,7 +91,16 @@ public class CarManageService {
         else {
             addOthersCarInfo(obuId, altitude, newLatlng, newSpeed, newDirection);
         }
-        WarningService.getInstance().checkCollision();
+        ConcurrentLinkedDeque<LatLng> deque = latLngDequeMap.get(obuId);
+        if(deque == null) {
+            deque = new ConcurrentLinkedDeque<>();
+            deque.addFirst(newLatlng);
+        }
+        if(deque.size() >= 50) {
+            deque.pollLast();
+        }
+        deque.addFirst(newLatlng);
+        latLngDequeMap.put(obuId,deque);
     }
     private void addSelfCarInfo(String obuId, double altitude, LatLng newLatlng, float newSpeed, float newDirection) {
         if(thisCar == null) {
@@ -87,6 +108,7 @@ public class CarManageService {
         }
         thisCar.addCarInfo(newLatlng, altitude, newSpeed, newDirection);
         thisCar.keepLife();
+        WarningService.getInstance().checkCollision();
     }
     private void addOthersCarInfo(String obuId, double altitude, LatLng newLatlng, float newSpeed, float newDirection) {
         Car car = carMap.get(obuId);

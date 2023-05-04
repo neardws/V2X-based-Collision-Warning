@@ -3,7 +3,6 @@ package com.linmu.collision_warning_system.Entry;
 import com.baidu.mapapi.model.LatLng;
 
 import java.util.Objects;
-import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Car {
     private final String carId;
@@ -14,7 +13,7 @@ public class Car {
     private float speed_last;
     private float direction;
     private float direction_last;
-    private final ConcurrentLinkedDeque<LatLng> latLngDeque;
+
 
     public Car(String carId, double altitude, LatLng latLng, float speed, float direction) {
         this.carId = carId;
@@ -25,9 +24,6 @@ public class Car {
         this.speed_last = speed;
         this.direction = direction;
         this.direction_last = direction;
-        this.latLngDeque = new ConcurrentLinkedDeque<>();
-        // 添加初始化数据
-        this.latLngDeque.addFirst(this.latLng);
     }
 
     public String getCarId() {
@@ -68,9 +64,7 @@ public class Car {
         this.life -= 1;
     }
 
-    public ConcurrentLinkedDeque<LatLng> getLatLngDeque() {
-        return latLngDeque;
-    }
+
 
     public void addCarInfo(LatLng latLng, double altitude, float speed, float direction) {
         this.latLng = latLng;
@@ -79,10 +73,6 @@ public class Car {
         this.speed = speed;
         this.direction_last = this.direction;
         this.direction = direction;
-        if(this.latLngDeque.size() >= 10) {
-            this.latLngDeque.pollLast();
-        }
-        this.latLngDeque.addFirst(latLng);
     }
 
     @Override

@@ -64,7 +64,7 @@ class com.linmu.collision_warning_system.services.udp.UdpReceiver {
 + void startReceive()
 + void stopReceive()
 }
-class com.linmu.collision_warning_system.services.NcsLocationService {
+class com.linmu.collision_warning_system.services.NcsService {
 - {static} NcsLocationService INSTANCE
 - String unique
 + {static} NcsLocationService getInstance()
