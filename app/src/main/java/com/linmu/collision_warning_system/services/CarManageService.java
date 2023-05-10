@@ -37,11 +37,13 @@ public class CarManageService {
     private final ConcurrentHashMap<String, List<Coordinate>> predictListMap;
 
     private final ConcurrentHashMap<String, ConcurrentLinkedDeque<LatLng>> latLngDequeMap;
+    private boolean isV2V;
 
     public CarManageService() {
         carMap = new ConcurrentHashMap<>();
         predictListMap = new ConcurrentHashMap<>();
         latLngDequeMap = new ConcurrentHashMap<>();
+        isV2V = true;
     }
 
     public List<Car> getCarList() {
@@ -101,6 +103,10 @@ public class CarManageService {
         }
         deque.addFirst(newLatlng);
         latLngDequeMap.put(obuId,deque);
+        // 当是V2V时，启动碰撞检测
+        if(isV2V && thisCar != null) {
+            WarningService.getInstance().checkCollision();
+        }
     }
     private void addSelfCarInfo(String obuId, double altitude, LatLng newLatlng, float newSpeed, float newDirection) {
         if(thisCar == null) {
@@ -108,7 +114,6 @@ public class CarManageService {
         }
         thisCar.addCarInfo(newLatlng, altitude, newSpeed, newDirection);
         thisCar.keepLife();
-        WarningService.getInstance().checkCollision();
     }
     private void addOthersCarInfo(String obuId, double altitude, LatLng newLatlng, float newSpeed, float newDirection) {
         Car car = carMap.get(obuId);
@@ -118,5 +123,9 @@ public class CarManageService {
         car.addCarInfo(newLatlng, altitude, newSpeed, newDirection);
         car.keepLife();
         carMap.put(obuId,car);
+    }
+    public boolean changeWarning() {
+        isV2V = !isV2V;
+        return isV2V;
     }
 }

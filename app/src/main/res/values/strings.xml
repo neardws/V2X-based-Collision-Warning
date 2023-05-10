@@ -12,4 +12,9 @@
     <string name="obuIdText">OBU ID:</string>
     <string name="delayDataText">时延数据</string>
     <string name="warn_button">警告</string>
+    <string name="distanceList">距离列表</string>
+    <string name="limitValue">阈值</string>
+    <string name="zeroDot">0.</string>
+    <string name="inputLimitValue">阈值</string>
+    <string name="changeMode">切换预警模式</string>
 </resources>

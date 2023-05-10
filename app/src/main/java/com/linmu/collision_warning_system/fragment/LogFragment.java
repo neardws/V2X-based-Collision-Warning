@@ -1,5 +1,6 @@
 package com.linmu.collision_warning_system.fragment;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,12 +17,15 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
 import com.linmu.collision_warning_system.R;
+import com.linmu.collision_warning_system.services.CarManageService;
 import com.linmu.collision_warning_system.services.NcsService;
 import com.linmu.collision_warning_system.services.WarningService;
 import com.linmu.collision_warning_system.utils.PropertiesUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -77,6 +81,8 @@ public class LogFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         Button sentButton = view.findViewById(R.id.sendButton);
         sentButton.setOnClickListener(this::doOnSendButtonClick);
+        Button changeButton = view.findViewById(R.id.changeButton);
+        changeButton.setOnClickListener(this::doOnChangeButtonClick);
     }
     private void doOnSendButtonClick(View view) {
         ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
@@ -140,6 +146,30 @@ public class LogFragment extends Fragment {
         }
         // 更新接收消息页
         textView.setText(res);
+    }
+
+    private void doOnChangeButtonClick(View view) {
+        boolean isV2V = CarManageService.getInstance().changeWarning();
+        String showWord;
+        if(isV2V) {
+            showWord = "当前为V2V通信";
+        }
+        else {
+            showWord = "当前为V2I通信";
+        }
+        AlertDialog dialog = new AlertDialog.Builder(getContext())
+                .setMessage(showWord)
+                .create();
+        dialog.show();
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                dialog.dismiss();
+                timer.cancel();
+            }
+        },1000);
     }
 
 }

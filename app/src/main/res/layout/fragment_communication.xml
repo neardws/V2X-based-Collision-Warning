@@ -41,14 +41,14 @@
         android:layout_height="wrap_content"
         android:padding="10dp"
         android:gravity="center"
-        android:text="距离列表"/>
+        android:text="@string/distanceList"/>
     <TextView
         android:id="@+id/valueText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
         android:gravity="center"
-        android:text="阈值"/>
+        android:text="@string/limitValue"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -58,7 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="end"
-            android:text="0."/>
+            android:text="@string/zeroDot"/>
         <EditText
             android:id="@+id/inputTest"
             android:layout_width="wrap_content"
@@ -66,9 +66,14 @@
             android:singleLine="true"
             android:imeOptions="actionDone"
             android:inputType="numberDecimal"
-            android:hint="阈值"/>
+            android:hint="@string/inputLimitValue"/>
 
     </LinearLayout>
+    <Button
+        android:id="@+id/changeButton"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:text="@string/changeMode"/>
 
 
 </LinearLayout>
