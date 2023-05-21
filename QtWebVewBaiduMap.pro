@@ -27,12 +27,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        computecollision.cpp \
         main.cpp \
         mainwindow.cpp \
         mybridgeofjs.cpp \
         myudp.cpp
 
 HEADERS += \
+        computecollision.h \
         mainwindow.h \
         mybridgeofjs.h \
         myudp.h

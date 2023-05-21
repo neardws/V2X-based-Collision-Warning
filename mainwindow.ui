@@ -19,7 +19,7 @@
      <rect>
       <x>630</x>
       <y>30</y>
-      <width>211</width>
+      <width>291</width>
       <height>31</height>
      </rect>
     </property>
@@ -32,20 +32,20 @@
      </font>
     </property>
     <property name="text">
-     <string>车辆碰撞预警系统</string>
+     <string>路口碰撞监测与展示系统</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>90</y>
+      <x>640</x>
+      <y>80</y>
       <width>101</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>启动监听</string>
+     <string>启动系统</string>
     </property>
    </widget>
    <widget class="QPlainTextEdit" name="plainTextEdit">
@@ -441,39 +441,83 @@
     <property name="geometry">
      <rect>
       <x>1260</x>
-      <y>380</y>
+      <y>370</y>
       <width>81</width>
-      <height>21</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>查看轨迹</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_clear">
-    <property name="geometry">
-     <rect>
-      <x>1360</x>
-      <y>380</y>
-      <width>71</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>清除轨迹</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton_cancel">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>90</y>
+      <x>810</x>
+      <y>80</y>
       <width>91</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>取消监听</string>
+     <string>关闭系统</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>380</y>
+      <width>161</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>当前两车相距(m)：</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_distance">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>370</y>
+      <width>121</width>
+      <height>31</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>370</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>预测是否发生碰撞：</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_showWarning">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>370</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+      <underline>false</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>
@@ -483,7 +527,7 @@
      <x>0</x>
      <y>0</y>
      <width>1511</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
